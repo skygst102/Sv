@@ -247,9 +247,17 @@ var Sv = {
             config.load  ? $.load(function(){config.load.call(model_o)}) :  null;
         };
         //执行实例对象controller函数
-        this.controller = function (fn) {
-            fn ? fn.call(model_o) : null;
-        }
+        this.controller = function () {
+            var arg=arguments[0];
+            var fn=arguments[1];
+            if (typeof arg=='string') {
+                $[arg](function () {
+                    fn.call(model_o);
+                })
+            }else if(typeof arg=='function'){
+                arg.call(model_o);
+            }
+        };
         
     },
     model: function (modelName, modelFn) {

@@ -52,7 +52,7 @@ Sv.model('component', function () {
         $.each(arr,function(key,i,arr){
             observe[key[0]].push([key[1],key[2]])
         }.bind(this))
-        //vm
+        //监听修改
         Sv.observe(this.store,this.store,null,setter);
         function setter(val,key){
             $.each(observe[key],function(key,i,arr){
@@ -125,18 +125,21 @@ var tpl2 = new Sv.component({
     run: function () {
        // console.log(this.tpl)
        // this.tpl=$('.tt')[0].innerHTML
-       
+       this.store.k='1021'
        //console.log(this.tpl)
     },
 })
 
+tpl2.store.k=0.1
 
+// //测试一： this指向模型，与模型配置 //this 与模型this保持一致
+    tpl2.controller('load',function () {
+       console.log(this);
 
-// $.load(function(){
-//     tpl.data.k = 'k===+++++'
-//     console.log(tpl)
-// })
-
+       console.log($('.tt'))
+        
+    })
+  
 
 //TODO
 //tplUrl      ==+
