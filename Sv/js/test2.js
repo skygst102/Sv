@@ -19,7 +19,7 @@ Sv.model('component', function () {
    
     this.action = function () {
         var arr=[];
-        var vdom = Sv.vdom(this.tpl);
+        var vdom = Sv.vdom(this.tpl||$(this.scope)[0].innerHTML);
         var RegExp=/\{\{([\s\S])\}\}/;
         $.each(vdom.querySelectorAll('*'), function (key, i,self) {
             var nodes=key.childNodes;
@@ -71,62 +71,64 @@ Sv.model('test', function () {
     }
 })
 
-    var tpl = new Sv.component({
-        scope: '#dss',
-        extend: ['test'],
-        store:{
-            k: '<script2>',
-            s:'....0.000...'
-        },
-        tpl: '<div>120....{{k}}\
-                <span style="color:red">{{k}}12</span>\
-                <div style="color:red">{{s}}0202</div>\
-                0.000{{k}}\
-              </div>\
-              <div style="color:red">{{k}}</div>\
-              <div>{{s}}\
-                <span style="color:red">{{k}}12</span>\
-                <span>{{k}}12\
-                    <a style="color:red">{{k}}12</a>\
-                </span>\
-              </div>',
-        run: function () {
-            info(this, '!this is a "run" function 137')
-            // console.log(this.tpl)
-            if (this.test.tt() == 'tt') {
-                console.log('调用成功')
-            }
-            console.log(this)
-            console.log(this.store)
-            this.store.k='##000....##'
-            this.store.s='ss'
-        },
-    });
+    // var tpl = new Sv.component({
+    //     scope: '#dss',
+    //     extend: ['test'],
+    //     store:{
+    //         k: '<script2>',
+    //         s:'....0.000...'
+    //     },
+    //     tpl: '<div>120....{{k}}\
+    //             <span style="color:red">{{k}}12</span>\
+    //             <div style="color:red">{{s}}0202</div>\
+    //             0.000{{k}}\
+    //           </div>\
+    //           <div style="color:red">{{k}}</div>\
+    //           <div>{{s}}\
+    //             <span style="color:red">{{k}}12</span>\
+    //             <span>{{k}}12\
+    //                 <a style="color:red">{{k}}12</a>\
+    //             </span>\
+    //           </div>',
+    //     run: function () {
+    //         info(this, '!this is a "run" function 137')
+    //         // console.log(this.tpl)
+    //         if (this.test.tt() == 'tt') {
+    //             console.log('调用成功')
+    //         }
+    //         console.log(this)
+    //         console.log(this.store)
+    //         this.store.k='##000....##'
+    //         this.store.s='ss'
+    //     },
+    // });
 
-    //测试一： this指向模型，与模型配置 //this 与模型this保持一致
-    tpl.controller(function () {
-        info(this, '!this is a "tpl.controller" function ')
-    })
-    if (tpl.tpl) {
-        info(tpl, '!this is a "tpl obj" function ')
-    }
+    // //测试一： this指向模型，与模型配置 //this 与模型this保持一致
+    // tpl.controller(function () {
+    //     info(this, '!this is a "tpl.controller" function ')
+    // })
+    // if (tpl.tpl) {
+    //     info(tpl, '!this is a "tpl obj" function ')
+    // }
 
 
 
 //在浏览器console 内输入  tpl.store.k='45646466' 可测试数据绑定效果
 
-// var tpl2 = new Sv.component({
-//     scope: '#ds',
-//     //extend: [],
-//     data: {
-//         k: '<script2>'
-//     },
-//     tpl: '<div>{{k}}</div>',
-//     run: function () {
-
-//         //   console.log(this.tpl)
-//     },
-// })
+var tpl2 = new Sv.component({
+    scope: '.tt',
+    //extend: [],
+    store: {
+        k: '<script2>'
+    },
+    tpl:'',
+    run: function () {
+       // console.log(this.tpl)
+       // this.tpl=$('.tt')[0].innerHTML
+       
+       //console.log(this.tpl)
+    },
+})
 
 
 

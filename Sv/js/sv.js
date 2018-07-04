@@ -226,28 +226,31 @@ var Sv = {
                 tplUrl:config.tplUrl,
                 store: config.store,
                 scope: typeof config === 'string' ? config : config.scope,
-            }
+            };
             if (config.extend && config.extend[0]) {
                 config.extend.forEach(function (key, i, self) {
-                    obj[key] = Sv[key + 'Extend'];
+                    obj[key] = Sv[key + 'Extend']
                 })
-            }
+            };
             modelFn.prototype = obj;
             var model_o = new modelFn();
             $.ready(function(){
                 model_o.action();
-            })
+            });
             //将配置赋值到根对象模型
             for (var key in config) {
                 if (key != 'controller') this[key] = config[key]
-            }
+            };
+            //实例化模型后使函数this 指向模型//执行配置函数
+            config.run ? config.run.call(model_o) :  null;
+            config.ready ? $.ready(function(){config.ready.call(model_o)}) :  null;
+            config.load  ? $.load(function(){config.load.call(model_o)}) :  null;
         };
         //执行实例对象controller函数
         this.controller = function (fn) {
             fn ? fn.call(model_o) : null;
         }
-        //实例化模型后使函数this 指向模型//执行配置函数
-        config ? config.run ? config.run.call(model_o) : null : null;
+        
     },
     model: function (modelName, modelFn) {
         Sv[modelName + 'Extend'] = new modelFn()[modelName];
