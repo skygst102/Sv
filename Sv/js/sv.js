@@ -235,12 +235,8 @@ window['Sv'] = {
             $.ready(function(){
                 model_o.action();
             });
-            //将配置赋值到根对象模型
-            for (var key in config) {
-                if (key != 'controller') this[key] = config[key]
-            };
             //实例化模型后使函数this 指向模型//执行配置函数
-            config.run ? config.run.call(model_o) :  null;
+            config.init ? config.init.call(model_o) :  null;
             config.ready ? $.ready(function(){config.ready.call(model_o)}) :  null;
             config.load  ? $.load(function(){config.load.call(model_o)}) :  null;
         };

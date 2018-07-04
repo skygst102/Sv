@@ -10,15 +10,13 @@ function info(obj, msg) {
 
 /* 建立模型 */
 Sv.model('component', function () {
-    var observe={};
     this.component = {
         ss: function () {
             console.log('ss')
         }
     }
-   
     this.action = function () {
-        var arr=[];
+        var observe={},arr=[];
         var vdom = Sv.vdom(this.tpl||$(this.scope)[0].innerHTML);
         var RegExp=/\{\{([\s\S])\}\}/;
         $.each(vdom.querySelectorAll('*'), function (key, i,self) {
@@ -61,12 +59,13 @@ Sv.model('component', function () {
                 key[0].innerHTML=key[1].replace(/\{([\s\S])\}/,val)
             })
         };
-    }
+    };
 });
 /* 建立模型 */
 Sv.model('test', function () {
     this.test = {
         tt: function () {
+            
             return 'tt'
             console.log('tt')
         }
@@ -92,7 +91,7 @@ Sv.model('test', function () {
                     <a style="color:red">{{k}}12</a><br/>\
                 </span>\
               </div>',
-        run: function () {
+        init : function () {
             info(this, '!this is a "run" function 137')
             // console.log(this.tpl)
             if (this.test.tt() == 'tt') {
@@ -116,7 +115,7 @@ Sv.model('test', function () {
 
 
 //在浏览器console 内输入  tpl.store.k='45646466' 可测试数据绑定效果
-
+var s='ready'
 var tpl2 = new Sv.component({
     scope: '.tt',
     extend: [],
@@ -124,18 +123,18 @@ var tpl2 = new Sv.component({
         k: '<script2>'
     },
     tpl:'',
-    run: function () {
+    init:function(){
+        this.store.k='10210'
+        console.log('100')
         console.log(this)
-       // console.log(this.tpl)
-       // this.tpl=$('.tt')[0].innerHTML
-       this.store.k='1021'
-       //console.log(this.tpl)
-    },
+    }
 })
 
 
-  console.log(tpl2)
-  console.log(tpl2.store)
+tpl2.controller(function(){
+    console.log('1')
+    this.store.k='100....'
+})
 
 
 
