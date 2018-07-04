@@ -155,7 +155,7 @@
     });
 });
 //module
-var Sv = {
+window['Sv'] = {
     defineProperty: function (mapdata, key, val, getter, setter) {
         var obj = {};
         Object.keys(mapdata).forEach(function (key, i, arr) {

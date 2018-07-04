@@ -38,10 +38,10 @@ Sv.model('component', function () {
         $.each(dom, function (key, i,self) {
             var tdata=key.svTpl=key.getAttribute('tdata');
             var svTpl=key.svTpl=key.getAttribute('svTpl');
+            var nodes=key.childNodes;
             key.removeAttribute('tdata');
             key.removeAttribute('svTpl');
-            var nodes=key.childNodes;
-             if (tdata) {
+            if (tdata) {
                 arr.push([tdata,key,svTpl]);
                 if (!observe.hasOwnProperty(key)) {
                     observe[tdata] =[];
@@ -117,12 +117,13 @@ Sv.model('test', function () {
 
 var tpl2 = new Sv.component({
     scope: '.tt',
-    //extend: [],
+    extend: [],
     store: {
         k: '<script2>'
     },
     tpl:'',
     run: function () {
+        console.log(this)
        // console.log(this.tpl)
        // this.tpl=$('.tt')[0].innerHTML
        this.store.k='1021'
@@ -130,16 +131,32 @@ var tpl2 = new Sv.component({
     },
 })
 
-tpl2.store.k=0.1
+
 
 // //测试一： this指向模型，与模型配置 //this 与模型this保持一致
-    tpl2.controller('load',function () {
-       console.log(this);
-
-       console.log($('.tt'))
-        
-    })
+tpl2.controller('load',function () {
+    console.log(this);
+})
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //TODO
 //tplUrl      ==+
