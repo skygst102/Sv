@@ -90,8 +90,6 @@
                     if ( rFn=== false || i == 1000) break;
                     if ( rFn=== true || i == 1000) continue;
                 }
-            }else{
-                throw obj  +''
             }
         },
         getEvent: function (event) {
