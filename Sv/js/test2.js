@@ -52,15 +52,7 @@ Sv.model('component', function () {
         $.each(arr,function(key,i,arr){
             observe[key[0]].push([key[1],key[2]])
         }.bind(this))
-     
-        //test
-        // var dd=document.querySelector(this.scope).querySelectorAll('*');
-        // [].slice.call(dd).forEach(function (key,i,self) {
-        //     console.log(key.tdata)
-        // }) 
-
         //vm
-       
         Sv.observe(this.store,this.store,null,setter);
         function setter(val,key){
             $.each(observe[key],function(key,i,arr){
@@ -105,8 +97,9 @@ Sv.model('test', function () {
                 console.log('调用成功')
             }
             console.log(this)
-            this.store.k='12'
-            this.store.ss='ss'
+            console.log(this.store)
+            this.store.k='##000....##'
+            this.store.s='ss'
         },
     });
 
@@ -118,8 +111,6 @@ Sv.model('test', function () {
         info(tpl, '!this is a "tpl obj" function ')
     }
 
-    
-    tpl.store.k='4000'
 
 
 //在浏览器console 内输入  tpl.store.k='45646466' 可测试数据绑定效果
