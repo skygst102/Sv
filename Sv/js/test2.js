@@ -98,9 +98,10 @@ Sv.model('test', function () {
                 console.log('调用成功')
             }
             console.log(this)
-            console.log(this.store)
+            
             this.store.k='##000....##'
-            this.store.s='ss'
+            this.store.s='ss';
+            console.log(this.store)
         },
     });
 
@@ -115,26 +116,23 @@ Sv.model('test', function () {
 
 
 //在浏览器console 内输入  tpl.store.k='45646466' 可测试数据绑定效果
-var s='ready'
-var tpl2 = new Sv.component({
-    scope: '.tt',
-    extend: [],
-    store: {
-        k: '<script2>'
-    },
-    tpl:'',
-    init:function(){
-        this.store.k='10210'
-        console.log('100')
-        console.log(this)
-    }
-})
+// var tpl2 = new Sv.component({
+//     scope: '.tt',
+//     extend: [],
+//     store: {
+//         k: '<script2>'
+//     },
+//     tpl:'',
+//     init:function(){
+//         this.store.k='10210'
+//         console.log(this)
+//     }
+// })
 
 
-tpl2.controller(function(){
-    console.log('1')
-    this.store.k='100....'
-})
+// tpl2.controller(function(){
+//     this.store.k='100....'
+// })
 
 
 

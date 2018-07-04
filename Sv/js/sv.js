@@ -220,7 +220,7 @@ window['Sv'] = {
     initModule: function (config, modelFn, modelName) {
         if (config) {
             var obj = {
-                tpl: config.tpl,
+                tpl: config.tpl.replace(/(\s){2}/g,''),
                 tplUrl:config.tplUrl,
                 store: config.store,
                 scope: typeof config === 'string' ? config : config.scope,
@@ -235,6 +235,12 @@ window['Sv'] = {
             $.ready(function(){
                 model_o.action();
             });
+            //将配置复制到构造函数
+            for (var key in config) {
+                key=='tpl' ? config[key]=config[key].replace(/(\s){2}/g,''):null;
+                this[key] = config[key]
+            };
+
             //实例化模型后使函数this 指向模型//执行配置函数
             config.init ? config.init.call(model_o) :  null;
             config.ready ? $.ready(function(){config.ready.call(model_o)}) :  null;
