@@ -153,9 +153,29 @@
             // }
             return this;
         },
-
+        trigger: function (evt) {
+            return $['each'](function () {
+                if ((evt == "click" || evt == "blur" || evt == "focus") && this[evt])
+                    return this[evt]();
+                if (doc.createEvent) {
+                    
+                    var e = doc.createEvent('Events');
+                    this.dispatchEvent(e, e.initEvent(evt, true, true));
+                } else if (this.fireEvent)
+                    try {
+                        if (evt !== "ready") {
+                            this.fireEvent("on" + evt);
+                        }
+                    } catch (e) { }
+            });
+        },
     });
 });
+
+
+
+//  if (!$['init']) $(window)['bind']("load",$['onload']);
+
 //module
 window['Sv'] = {
     defineProperty: function (mapdata, key, val, getter, setter) {
