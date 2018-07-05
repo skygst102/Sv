@@ -14,7 +14,7 @@
             this[0] = selector;
             this.length = 1;
             return this;
-        } else if (/^#|^./.test(selector)) {
+        } else if (typeof selector=='string') {
             this.selector = selector || null;
             $.nodeList = this.context.querySelectorAll(selector);
             this.length = $.nodeList.length;
@@ -37,13 +37,16 @@
     };
     $.extend = function (source) {
         for (var key in source) {
-            // if (!$.hasOwnProperty(key)) {
+            if (!$.hasOwnProperty(key)) {
                 $[key] = source[key];
-            // } else {
-                // throw '$.extend (' + key + ') already exist'
-            // }
+            } else {
+                throw '$.extend (' + key + ') already exist'
+            }
         }
     };
+    $.plug=function(name,fn){
+        fn($);
+    }
     window[o] = $;
     factory($);
 })(this, '$', function ($) {
@@ -122,6 +125,7 @@
             return $(e, this[0], 0)
         },
     });
+
     //事件
     $.fnExtend({
         addEvent: function (type, selector, callback) {
@@ -204,7 +208,7 @@ window['Sv'] = {
             var tpl = str.replace(/\{\{\}\}|[\r\t\n]/g, '')
                 .replace(/\{\{([\s\S]+?)\}\}/g, function (match, value) {
                     return "' + escape(" + value + ")+ '"
-                }).replace(/<%([\s\S]+?)%>/g, function (match, value) {
+                }).replace(/\{([\s\S]+?)\}/g, function (match, value) {
                     return "';\n" + value + "\ntpl+='";
                 }).replace(/(tpl\+=\'\';)/g, '');
             tpl = "tpl='" + tpl + "';";
@@ -215,6 +219,8 @@ window['Sv'] = {
             var tpl = complied(tpl)
             return tpl(data, escape);
         }
+
+       
         return Engine(tpl, data)
     },
     initModule: function (config, modelFn, modelName) {

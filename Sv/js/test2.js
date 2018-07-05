@@ -87,16 +87,18 @@ Sv.model('test', function () {
               <div style="color:red">{{k}}</div><br/>\
               <div>{{s}}\
                 <span style="color:red">{{k}}12</span><br/>\
-                <span>{{k}}12<br/>\
+                <span>\
+                    {{k}}12<br/>\
                     <a style="color:red">{{k}}12</a><br/>\
                 </span>\
-              </div>',
+              </div>{console.log("123")}',
         init : function () {
             info(this, '!this is a "run" function 137')
             // console.log(this.tpl)
             if (this.test.tt() == 'tt') {
                 console.log('调用成功')
             }
+
             console.log(this)
             
             this.store.k='##000....##'
