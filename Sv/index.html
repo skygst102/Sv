@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,10 +10,8 @@
     <script src="./js/ajax.js"></script>
     <!-- <script src="./js/test1.js"></script> -->
     <script src="./js/test2.js"></script>
-    
-    
-</head>
 
+</head>
 <body>
     <div class="tt">
         <ul>
@@ -28,28 +25,36 @@
             <li>{{k}}</li>
         </ul>
     </div>
-
     <div id="dss"></div>
     <div id="ds"></div>
-
 </body>
+<script> 
+$.ajax({ 
+    url: 'ff.html' ,
+    success: function (data) {
+  
+        console.log(data);
+        
+        console.log('success');
+    },
+    error:function(err){
+        console.log(err);
+        
+       
+    },
+    dataType: "text/plain"
+}) 
 
+    // var e = document.createEvent('Events');
+    // e.initEvent('e', true, true)
+   
 
-
-<script>
-$.ajax({
-    url:'/yourFile.html'
-})
-
-
-
-
-
-
-
-
-
-
-
+    // $('#dss')[0].addEventListener('e',function(){
+    //     console.log('1000000.0...0.');
+        
+    // },false)
+    //  $('#dss')[0].dispatchEvent(e)
+ 
 </script>
+
 </html>

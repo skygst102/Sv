@@ -1,18 +1,18 @@
 $['plug']("ajax", function ($) {
     var xhrs = [
-            function () {
-                return new XMLHttpRequest();
-            },
-            function () {
-                return new ActiveXObject("Microsoft.XMLHTTP");
-            },
-            function () {
-                return new ActiveXObject("MSXML2.XMLHTTP.3.0");
-            },
-            function () {
-                return new ActiveXObject("MSXML2.XMLHTTP");
-            }
-        ],
+        function () {
+            return new XMLHttpRequest();
+        },
+        function () {
+            return new ActiveXObject("Microsoft.XMLHTTP");
+        },
+        function () {
+            return new ActiveXObject("MSXML2.XMLHTTP.3.0");
+        },
+        function () {
+            return new ActiveXObject("MSXML2.XMLHTTP");
+        }
+    ],
         _xhrf = null;
 
     function _xhr() {
@@ -25,9 +25,9 @@ $['plug']("ajax", function ($) {
                     _xhrf = f;
                     return req;
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
-        return function () {};
+        return function () { };
     }
     function _xhrResp(xhr, dataType) {
         dataType = (dataType || xhr.getResponseHeader("Content-Type").split(";")[0]).toLowerCase();
@@ -46,14 +46,13 @@ $['plug']("ajax", function ($) {
             return xhr.responseXML;
         return xhr.responseText;
     }
-    function assign(obj){
-        $.each([].slice.call(arguments), function(key){
-            console.log(key)
-          for(var k in key)
-            if (obj[k] == null) obj[k] = key[k];
+    function assign(obj) {
+        $.each([].slice.call(arguments), function (key) {
+            for (var k in key)
+                if (obj[k] == null) obj[k] = key[k];
         });
         return obj;
-      };
+    };
 
     $['formData'] = function formData(o) {
         var kvps = [],
@@ -62,15 +61,15 @@ $['plug']("ajax", function ($) {
         return kvps.join('&');
     };
 
-    $['each'](['ajaxStart', 'ajaxStop', 'ajaxComplete',  'ajaxSuccess', 'ajaxSend'], function (key, i) {
-        $['fn'][key] = function (f) {
-            return this['bind'](key, f);
-            console.log(this['bind'](key, f))
+    $['each'](['ajaxStart', 'ajaxStop', 'ajaxComplete', 'ajaxSuccess', 'ajaxSend'], function (key, i) {
+        $[key] = function (f) {
+            return f;
+            //return this['bind'](key, f);
         };
     });
 
     function ajax(url, o) {
-        var xhr = _xhr(),timer, n = 0;
+        var xhr = _xhr(), timer, n = 0;
         if (typeof url === "object") o = url;
         else o['url'] = url;
         o = assign(o, {
@@ -96,27 +95,28 @@ $['plug']("ajax", function ($) {
             if (xhr.readyState == 4) {
                 if (timer) clearTimeout(timer);
                 if (xhr.status < 300) {
-                    var res, decode = true,dt = o.dataType || "";
+                    var res, decode = true, dt = o.dataType || "";
                     try {
                         res = _xhrResp(xhr, dt, o);
                     } catch (e) {
                         decode = false;
                         if (o.error)
                             o.error(xhr, xhr.status, xhr.statusText);
-                        evtCtx['trigger'](cbCtx, "ajaxError", [xhr, xhr.statusText, o]);
+                         //$['trigger'](cbCtx, "ajaxError", [xhr, xhr.statusText, o]);
                     }
                     if (o['success'] && decode && (dt.indexOf('json') >= 0 || !!res))
                         o['success'](res);
-                    evtCtx['trigger'](cbCtx, "ajaxSuccess", [xhr, res, o]);
+                        
+                    $['trigger'](cbCtx, "ajaxSuccess", [xhr, res, o]);
 
                 } else {
                     if (o.error)
                         o.error(xhr, xhr.status, xhr.statusText);
-                    evtCtx['trigger'](cbCtx, "ajaxError", [xhr, xhr.statusText, o]);
+                   // $['trigger'](cbCtx, "ajaxError", [xhr, xhr.statusText, o]);
                 }
                 if (o['complete'])
                     o['complete'](xhr, xhr.statusText);
-                evtCtx['trigger'](cbCtx, "ajaxComplete", [xhr, o]);
+                //$['trigger'](cbCtx, "ajaxComplete", [xhr, o]);
             } else if (o['progress']) o['progress'](++n);
         };
         var url = o['url'],
@@ -129,9 +129,8 @@ $['plug']("ajax", function ($) {
         if (!isPost && data) {
             url += "?" + data;
             data = null;
-            if (!cache)
-                url = url + "&_=" + (new Date().getTime());
-        } else(!isPost && !cache)
+            if (!cache) url = url + "&_=" + (new Date().getTime());
+        } else if(!isPost && !cache)
         url = url + "?_=" + (new Date().getTime());
         cache = null;
         xhr.open(o['type'], url);
@@ -154,7 +153,7 @@ $['plug']("ajax", function ($) {
     $['ajax'] = ajax;
 
     $['getJSON'] = function (url, data, success, error) {
-        if ($.typeof(data,'Function')) {
+        if ($.typeof(data, 'Function')) {
             error = success;
             success = data;
             data = null;
@@ -168,7 +167,7 @@ $['plug']("ajax", function ($) {
     };
 
     $['get'] = function (url, data, success, dataType) {
-        if ($.typeof(data,'Function')) {
+        if ($.typeof(data, 'Function')) {
             dataType = success;
             success = data;
             data = null;
@@ -204,3 +203,6 @@ $['plug']("ajax", function ($) {
     // if (!window.JSON)
     //   $['loadAsync']("http://ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js");
 });
+
+
+

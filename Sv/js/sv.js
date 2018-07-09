@@ -1,3 +1,4 @@
+
 /**
  * author skygst
  * 
@@ -84,7 +85,6 @@
             return otype
         },
         each: function (obj, fn) {
-            var r;
             if ($.typeof(obj,'Object') ) {
                 for (var key in obj) fn.call(obj, obj[key], i, obj);
             } else if (obj.length) {
@@ -154,27 +154,15 @@
             return this;
         },
         trigger: function (evt) {
-            return $['each'](function () {
-                if ((evt == "click" || evt == "blur" || evt == "focus") && this[evt])
-                    return this[evt]();
-                if (doc.createEvent) {
-                    
-                    var e = doc.createEvent('Events');
-                    this.dispatchEvent(e, e.initEvent(evt, true, true));
-                } else if (this.fireEvent)
-                    try {
-                        if (evt !== "ready") {
-                            this.fireEvent("on" + evt);
-                        }
-                    } catch (e) { }
-            });
+            if (evt == "click" || evt == "blur" || evt == "focus")
+                return evt();
+            if (document.createEvent) {
+                var e = document.createEvent('Events');
+                evt[0].dispatchEvent(e, e.initEvent(evt, true, true));
+            } 
         },
     });
 });
-
-
-
-//  if (!$['init']) $(window)['bind']("load",$['onload']);
 
 //module
 window['Sv'] = {
@@ -284,7 +272,6 @@ window['Sv'] = {
                 arg.call(model_o);
             }
         };
-        
     },
     model: function (modelName, modelFn) {
         Sv[modelName + 'Extend'] = new modelFn()[modelName];
@@ -293,5 +280,7 @@ window['Sv'] = {
         };
     }
 };
+
+
 
 
