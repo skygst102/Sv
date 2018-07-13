@@ -7,7 +7,7 @@ function _each(obj, fn) {
             if (rFn === false || i == 1000) break;
             if (rFn === true || i == 1000) continue;
         }
-    }else{
+    } else {
         for (var key in obj) fn.call(obj, obj[key], i, obj);
     }
 }
@@ -30,17 +30,17 @@ Sv.model("component", function () {
         var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
         var RegExp = /\{\{([\s\S]+?)\}\}/;
         [].slice.call(vdom.querySelectorAll("*")).forEach(function (key, i, self) {
-            if (key.childNodes.length ==1) {
+            if (key.childNodes.length == 1) {
                 var nodeval = key.innerText;
-                if (RegExp.test(nodeval) ) {
-                    var tdata = nodeval.match(RegExp)[1].replace(/\s/g,'');
+                if (RegExp.test(nodeval)) {
+                    var tdata = nodeval.match(RegExp)[1].replace(/\s/g, '');
                     var svTpl = key.childNodes[0].nodeValue.replace(RegExp, "{$1}");
                     key.setAttribute("tdata", tdata);
                     key.setAttribute("svTpl", svTpl);
                 }
             }
         }.bind(this));
-        
+
         var html = Sv.tplEngine(vdom.innerHTML, this.store); console.log(html);
         //处理dom 
         document.querySelector(this.scope).innerHTML = html;
@@ -63,12 +63,9 @@ Sv.model("component", function () {
             observe[key[0]].push([key[1], key[2]]);
         }.bind(this));
         console.log(observe);
-        
-        
+
         //监听修改 
         Sv.observe(this.store, this.store, null, setter);
-        // console.log(this.store);
-        // Sv.observe(this.store.b, this.store.b, null, setter);
         function setter(val, key) {
             observe[key].forEach(function (key, i, arr) {
                 key[0].innerHTML = key[1].replace(/\{([\s\S]+?)\}/, val);
@@ -91,7 +88,7 @@ var tpl = new Sv.component({
     store: {
         k: "<script2>",
         s: "....0.000...",
-        b:{s:'bsbssbsbsbsbsbsbsb'}
+        b: { s: 'bsbssbsbsbsbsbsbsb' }
     },
     tpl: '<div style = "color:red" > {{b.s}}</div > <br />',
     init: function () {
@@ -103,7 +100,7 @@ var tpl = new Sv.component({
         console.log(this);
         this.store.k = "##000....##";
         this.store.s = "ss";
-       
+
         console.log(this.store);
     }
 });
