@@ -63,7 +63,7 @@ $['plug']("ajax", function ($) {
 
     $['each'](['ajaxStart', 'ajaxStop', 'ajaxComplete', 'ajaxSuccess', 'ajaxSend'], function (key, i) {
         $[key] = function (f) {
-            return f;
+            $[key]= f;
             //return this['bind'](key, f);
         };
     });
@@ -102,21 +102,20 @@ $['plug']("ajax", function ($) {
                         decode = false;
                         if (o.error)
                             o.error(xhr, xhr.status, xhr.statusText);
-                         //$['trigger'](cbCtx, "ajaxError", [xhr, xhr.statusText, o]);
+                            evtCtx['trigger'](cbCtx, "ajaxError", [xhr, xhr.statusText, o]);
                     }
                     if (o['success'] && decode && (dt.indexOf('json') >= 0 || !!res))
                         o['success'](res);
-                        
-                    $['trigger'](cbCtx, "ajaxSuccess", [xhr, res, o]);
+                        evtCtx['trigger'](cbCtx, "ajaxSuccess", [xhr, res, o]);
 
                 } else {
                     if (o.error)
                         o.error(xhr, xhr.status, xhr.statusText);
-                   // $['trigger'](cbCtx, "ajaxError", [xhr, xhr.statusText, o]);
+                        evtCtx['trigger'](cbCtx, "ajaxError", [xhr, xhr.statusText, o]);
                 }
                 if (o['complete'])
                     o['complete'](xhr, xhr.statusText);
-                //$['trigger'](cbCtx, "ajaxComplete", [xhr, o]);
+                    evtCtx['trigger'](cbCtx, "ajaxComplete", [xhr, o]);
             } else if (o['progress']) o['progress'](++n);
         };
         var url = o['url'],
