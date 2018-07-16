@@ -29,43 +29,77 @@ Sv.model("component", function () {
             arr = [];
         var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
         var RegExp = /\{\{([\s\S]+?)\}\}/;
-        [].slice.call(vdom.querySelectorAll("*")).forEach(function (key, i, self) {
-            if (key.childNodes.length == 1) {
-                var nodeval = key.innerText;
-                if (RegExp.test(nodeval)) {
-                    var tdata = nodeval.match(RegExp)[1].replace(/\s/g, '');
-                    var svTpl = key.childNodes[0].nodeValue.replace(RegExp, "{$1}");
-                    key.setAttribute("tdata", tdata);
-                    key.setAttribute("svTpl", svTpl);
+
+        //@bind(html)
+        //@bind(attr)
+        //@bind(html,attr)
+        var hasBind=function (attrs) {
+            for (var i = 0; i < attrs.length ;i++){
+                if (/@bind/.test(attrs[i].nodeName) && attrs[i].nodeValue!='') {
+                    return attrs[i];
                 }
+            } 
+         };
+        
+        ;[].slice.call(vdom.querySelectorAll("*")).forEach(function (key, i, self) {
+            var bind = hasBind(key.attributes);
+            if (bind) {
+                var nodes = key.childNodes;
+                if (nodes.length>1) {
+                    var svbind=[],svtpl=[];
+                    for (var i = 0; i < nodes.length;i++){
+                        if (nodes[i].nodeType == 3 && RegExp.test(nodes[i].nodeValue)) {
+                            svbind.push(nodes[i].nodeValue.match(RegExp)[1].replace(/\s/g, ''));
+                            svtpl.push(nodes[i].nodeValue.replace(RegExp, "{$1}").replace(/\s/g, ''));
+                            console.log(nodes[i]);
+                        }
+                    }
+                }else{
+                    var nodeValue = key.childNodes[0].nodeValue;
+                    if (RegExp.test(nodeValue)) {
+                        var svbind = nodeValue.match(RegExp)[1].replace(/\s/g, '');
+                        var svtpl = nodeValue.replace(RegExp, "{$1}").replace(/\s/g, '');
+                    }
+                }
+                if (svbind) {
+                    key.setAttribute("svbind", svbind);
+                    key.setAttribute("svtpl", svtpl);
+                }
+                
             }
         }.bind(this));
 
-        var html = Sv.tplEngine(vdom.innerHTML, this.store); console.log(html);
-        //处理dom 
+        console.log(vdom); 
+        var html = Sv.tplEngine(vdom.innerHTML, this.data); 
         document.querySelector(this.scope).innerHTML = html;
-        var dom = document.querySelector(this.scope).querySelectorAll("*");
-        [].slice.call(dom).forEach(function (key, i, self) {
-            var tdata = key.svTpl = key.getAttribute("tdata");
-            var svTpl = key.svTpl = key.getAttribute("svTpl");
-            var nodes = key.childNodes;
-            key.removeAttribute("tdata");
-            key.removeAttribute("svtpl");
-            if (tdata) {
-                arr.push([tdata, key, svTpl]);
-                if (!observe.hasOwnProperty(key)) {
-                    observe[tdata] = [];
-                }
-            }
-        }.bind(this));
+        //处理dom 
+        // var dom = document.querySelector(this.scope).querySelectorAll("*");
+
+
+        // [].slice.call(dom).forEach(function (key, i, self) {
+        //     var svbind = key.svtpl = key.getAttribute("svbind");
+        //     var svtpl = key.svtpl = key.getAttribute("svtpl");
+        //     var nodes = key.childNodes;
+        //     key.removeAttribute("svbind");
+        //     key.removeAttribute("svtpl");
+        //     if (svbind) {
+        //         arr.push([svbind, key, svtpl]);
+        //         if (!observe.hasOwnProperty(key)) {
+        //             observe[svbind] = [];
+        //         }
+        //     }
+        // }.bind(this));
+
+   
+        
         //映射对象 
         arr.forEach(function (key, i, arr) {
             observe[key[0]].push([key[1], key[2]]);
         }.bind(this));
-        console.log(observe);
+        // console.log(observe); 
 
         //监听修改 
-        Sv.observe(this.store, this.store, null, setter);
+        Sv.observe(this.data, this.data, null, setter);
         function setter(val, key) {
             observe[key].forEach(function (key, i, arr) {
                 key[0].innerHTML = key[1].replace(/\{([\s\S]+?)\}/, val);
@@ -85,12 +119,23 @@ Sv.model("test", function () {
 var tpl = new Sv.component({
     scope: "#dss",
     extend: ["test"],
+    data: {
+        k: "<script2>",
+        s: "....0.000...",
+        b: 'bsbssbsbsbsbsbsbsb'
+    },
     store: {
         k: "<script2>",
         s: "....0.000...",
-        b: { s: 'bsbssbsbsbsbsbsbsb' }
+        b: 'bsbssbsbsbsbsbsbsb'
     },
-    tpl: '<div style = "color:red" > {{b.s}}</div > <br />',
+    tpl: '<div id="ss" style = "color:red" @bind(html)="ks"> {{b}}\
+            <span @bind(attr)>123</span>\
+            <span>1234<a>aaaaaaaa<i></i></a></span>\
+            {{s}}\
+        </div >\
+        <div @bind(css,attr)="css,attr">{{b}}<span @bind(css,attr,s)="css,attr">{{s}}</span></div>\
+        <div @bind(css,attr)="css">122222222</div>',
     init: function () {
         info(this, '!this is a "run" function 137');
         // console.log(this.tpl) 
@@ -98,17 +143,18 @@ var tpl = new Sv.component({
             console.log("调用成功");
         }
         console.log(this);
-        this.store.k = "##000....##";
-        this.store.s = "ss";
-
-        console.log(this.store);
+  
+;
     }
 });
 // //测试一： this指向模型，与模型配置 //this 与模型this保持一致 
 tpl.controller('ready', function () {
     info(this, '!this is a "tpl.controller" function ')
-    this.store.b = 12313;
+
 })
+
+
+
 // if (tpl.tpl) {
 //     info(tpl, '!this is a "tpl obj" function ')
 // }

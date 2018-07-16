@@ -74,6 +74,7 @@ window['Sv'] = {
             var obj = {
                 tpl: config.tpl.replace(/(\s){2}/g,''),
                 tplUrl:config.tplUrl,
+                data: config.data,
                 store: config.store,
                 scope: typeof config === 'string' ? config : config.scope,
             };
