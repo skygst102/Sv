@@ -74,25 +74,22 @@ Sv.model("component", function () {
         console.log(html);
         
         //处理dom 
-        // var dom = document.querySelector(this.scope).querySelectorAll("*");
+        var dom = document.querySelector(this.scope).querySelectorAll("*");
+        [].slice.call(dom).forEach(function (key, i, self) {
+            var svbind = key.svtpl = key.getAttribute("svbind");
+            var svtpl = key.svtpl = key.getAttribute("svtpl");
+            var nodes = key.childNodes;
+            // key.removeAttribute("svbind");
+            // key.removeAttribute("svtpl");
+            if (svbind) {
+                arr.push([svbind, key, svtpl]);
+                if (!observe.hasOwnProperty(key)) {
+                    observe[svbind] = [];
+                }
+            }
+        }.bind(this));
 
-
-        // [].slice.call(dom).forEach(function (key, i, self) {
-        //     var svbind = key.svtpl = key.getAttribute("svbind");
-        //     var svtpl = key.svtpl = key.getAttribute("svtpl");
-        //     var nodes = key.childNodes;
-        //     key.removeAttribute("svbind");
-        //     key.removeAttribute("svtpl");
-        //     if (svbind) {
-        //         arr.push([svbind, key, svtpl]);
-        //         if (!observe.hasOwnProperty(key)) {
-        //             observe[svbind] = [];
-        //         }
-        //     }
-        // }.bind(this));
-
-   
-        
+        // analysis
         //映射对象 
         arr.forEach(function (key, i, arr) {
             observe[key[0]].push([key[1], key[2]]);
@@ -130,10 +127,10 @@ var tpl = new Sv.component({
         s: "....0.000...",
         b: 'bsbssbsbsbsbsbsbsb'
     },
-    tpl: '<div id="ss" style = "color:red" @bind(html)="ks"> {{b}}\
+    tpl: '<div id="ss" style = "color:red" @bind(nodeValue)="ks"> test{{b}}\
             <span @bind(attr)>123</span>\
             <span>1234<a>aaaaaaaa<i></i></a></span>\
-            {{s}}\
+            {{s}}test\
         </div >\
         <div @bind(css,attr)="css,attr">{{b}}<span @bind(css,attr,s)="css,attr">{{s}}</span></div>\
         <div @bind(css,attr)="css">122222222</div>',
