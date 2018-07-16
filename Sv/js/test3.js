@@ -51,7 +51,6 @@ Sv.model("component", function () {
                         if (nodes[i].nodeType == 3 && RegExp.test(nodes[i].nodeValue)) {
                             svbind.push(nodes[i].nodeValue.match(RegExp)[1].replace(/\s/g, ''));
                             svtpl.push(nodes[i].nodeValue.replace(RegExp, "{$1}").replace(/\s/g, ''));
-                            console.log(nodes[i]);
                         }
                     }
                 }else{
@@ -65,13 +64,15 @@ Sv.model("component", function () {
                     key.setAttribute("svbind", svbind);
                     key.setAttribute("svtpl", svtpl);
                 }
-                
             }
         }.bind(this));
 
         console.log(vdom); 
         var html = Sv.tplEngine(vdom.innerHTML, this.data); 
         document.querySelector(this.scope).innerHTML = html;
+
+        console.log(html);
+        
         //处理dom 
         // var dom = document.querySelector(this.scope).querySelectorAll("*");
 
