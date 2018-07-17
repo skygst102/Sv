@@ -39,35 +39,37 @@ Sv.model("component", function () {
                     return attrs[i];
                 }
             } 
-         };
-        
+        };
+        //编译之前处理模板
         ;[].slice.call(vdom.querySelectorAll("*")).forEach(function (key, i, self) {
             var bind = hasBind(key.attributes);
             if (bind) {
                 var nodes = key.childNodes;
                 if (nodes.length>1) {
-                    var svbind=[],svtpl=[];
+                    var svtpl=[];
+                    // var svbind = [];
                     for (var i = 0; i < nodes.length;i++){
                         if (nodes[i].nodeType == 3 && RegExp.test(nodes[i].nodeValue)) {
-                            svbind.push(nodes[i].nodeValue.match(RegExp)[1].replace(/\s/g, ''));
+                            // svbind.push(nodes[i].nodeValue.match(RegExp)[1].replace(/\s/g, ''));
                             svtpl.push(nodes[i].nodeValue.replace(RegExp, "{$1}").replace(/\s/g, ''));
                         }
                     }
                 }else{
                     var nodeValue = key.childNodes[0].nodeValue;
                     if (RegExp.test(nodeValue)) {
-                        var svbind = nodeValue.match(RegExp)[1].replace(/\s/g, '');
+                        // var svbind = nodeValue.match(RegExp)[1].replace(/\s/g, '');
                         var svtpl = nodeValue.replace(RegExp, "{$1}").replace(/\s/g, '');
                     }
                 }
-                if (svbind) {
-                    key.setAttribute("svbind", svbind);
+                if (svtpl) {
+                    // key.setAttribute("svbind", svbind);
                     key.setAttribute("svtpl", svtpl);
                 }
             }
         }.bind(this));
 
         console.log(vdom); 
+        //编译模板
         var html = Sv.tplEngine(vdom.innerHTML, this.data); 
         document.querySelector(this.scope).innerHTML = html;
 
@@ -75,30 +77,80 @@ Sv.model("component", function () {
         
         //处理dom 
         var dom = document.querySelector(this.scope).querySelectorAll("*");
+        var RegExp2 =/\[(.*)\]/;
+        var RegExp3 =/\((.*)\)/;
+        var filterAttr='css,attr,nodeValue';
+        function attrBind(arg){
+            // console.warn(arg);
+            
+        }
+        
         [].slice.call(dom).forEach(function (key, i, self) {
-            var svbind = key.svtpl = key.getAttribute("svbind");
-            var svtpl = key.svtpl = key.getAttribute("svtpl");
-            var nodes = key.childNodes;
-            // key.removeAttribute("svbind");
-            // key.removeAttribute("svtpl");
-            if (svbind) {
-                arr.push([svbind, key, svtpl]);
-                if (!observe.hasOwnProperty(key)) {
-                    observe[svbind] = [];
+            var bind = hasBind(key.attributes);
+            if (bind) {
+                //@bind 句法定义
+                //bind.nodeName (@bind*)
+                //@bind[attr(style)]='css'
+                //@bind[html]='ht'
+                var changeAttr = bind.nodeName.match(RegExp2)[1];
+                var attrMap = bind.nodeValue.split(',');
+                if (/text/.test(changeAttr)) {
+                    console.info(changeAttr);
                 }
-            }
+                if (/attr/.test(changeAttr)) {
+                    var attrArg=changeAttr.match(RegExp3)[1];
+                    attrBind(attrArg)
+                }
+                // console.log(changeAttr,attrMap);
+                //this.store赋值
+                for (var i = 0; i < attrMap.length;i++){
+                    if (!this.store.hasOwnProperty(attrMap[i])) {
+                        this.store[attrMap[i]]='';
+                    }else{
+                        console.error('Variables (' + attrMap[i] + ') already exist!');
+                        return;
+                    }
+                };
+
+                console.log(attrMap);
+                // console.log(this.store);
+                var svtpl = key.svtpl = key.getAttribute("svtpl");
+                arr.push([attrMap, key, svtpl]);
+                attrMap.forEach(function (key, i, arr) {
+                    if (!observe.hasOwnProperty(key)) {
+                        observe[key] = [];
+                    }
+                })
+                
+                // var nodes = key.childNodes;
+                // key.removeAttribute("svbind");
+                // key.removeAttribute("svtpl");
+                // if (svtpl&&attrMap) {
+                 
+                    
+                console.log(observe);
+                
+            };
+            
         }.bind(this));
 
         // analysis
         //映射对象 
-        arr.forEach(function (key, i, arr) {
-            observe[key[0]].push([key[1], key[2]]);
-        }.bind(this));
+        // arr.forEach(function (key, i, arr) {
+        //     key[0].forEach(function (key2, i, arr){
+        //         observe[key2].push([key[1], key[2]]);
+        //     })
+            
+        // });
         // console.log(observe); 
 
         //监听修改 
-        Sv.observe(this.data, this.data, null, setter);
+        Sv.observe(this.store, this.store, null, setter);
         function setter(val, key) {
+            console.log(val);
+            
+            console.log(key);
+            
             observe[key].forEach(function (key, i, arr) {
                 key[0].innerHTML = key[1].replace(/\{([\s\S]+?)\}/, val);
             });
@@ -123,17 +175,17 @@ var tpl = new Sv.component({
         b: 'bsbssbsbsbsbsbsbsb'
     },
     store: {
-        k: "<script2>",
-        s: "....0.000...",
-        b: 'bsbssbsbsbsbsbsbsb'
+        // k: "<script2>",
+        // s: "....0.000...",
+        // b: 'bsbssbsbsbsbsbsbsb'
     },
-    tpl: '<div id="ss" style = "color:red" @bind(nodeValue)="ks"> test{{b}}\
-            <span @bind(attr)>123</span>\
+    tpl: '<div id="ss" style = "color:red" @bind[text]="te1,te2"> test{{b}}\
+            <span @bind[attr(clientHeight)]>123</span>\
             <span>1234<a>aaaaaaaa<i></i></a></span>\
             {{s}}test\
         </div >\
-        <div @bind(css,attr)="css,attr">{{b}}<span @bind(css,attr,s)="css,attr">{{s}}</span></div>\
-        <div @bind(css,attr)="css">122222222</div>',
+        <div @bind[attr(style)]="css">{{b}}<span @bind[attr(style)]="css">{{s}}</span></div>\
+        <div @bind[attr(style)]="css">122222222</div>',
     init: function () {
         info(this, '!this is a "run" function 137');
         // console.log(this.tpl) 
