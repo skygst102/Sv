@@ -47,22 +47,18 @@ Sv.model("component", function () {
                 var nodes = key.childNodes;
                 if (nodes.length>1) {
                     var svtpl=[];
-                    // var svbind = [];
                     for (var i = 0; i < nodes.length;i++){
                         if (nodes[i].nodeType == 3 && RegExp.test(nodes[i].nodeValue)) {
-                            // svbind.push(nodes[i].nodeValue.match(RegExp)[1].replace(/\s/g, ''));
                             svtpl.push(nodes[i].nodeValue.replace(RegExp, "{$1}").replace(/\s/g, ''));
                         }
                     }
                 }else{
                     var nodeValue = key.childNodes[0].nodeValue;
                     if (RegExp.test(nodeValue)) {
-                        // var svbind = nodeValue.match(RegExp)[1].replace(/\s/g, '');
                         var svtpl = nodeValue.replace(RegExp, "{$1}").replace(/\s/g, '');
                     }
                 }
                 if (svtpl) {
-                    // key.setAttribute("svbind", svbind);
                     key.setAttribute("svtpl", svtpl);
                 }
             }
@@ -112,7 +108,6 @@ Sv.model("component", function () {
                     }
                 };
 
-                console.log(attrMap);
                 // console.log(this.store);
                 var svtpl = key.svtpl = key.getAttribute("svtpl");
                 arr.push([attrMap, key, svtpl]);
@@ -121,14 +116,15 @@ Sv.model("component", function () {
                         observe[key] = [];
                     }
                 })
-                
+               
                 // var nodes = key.childNodes;
                 // key.removeAttribute("svbind");
                 // key.removeAttribute("svtpl");
                 // if (svtpl&&attrMap) {
                  
+                console.log(arr);
                     
-                console.log(observe);
+                // console.log(observe);
                 
             };
             
@@ -147,10 +143,6 @@ Sv.model("component", function () {
         //监听修改 
         Sv.observe(this.store, this.store, null, setter);
         function setter(val, key) {
-            console.log(val);
-            
-            console.log(key);
-            
             observe[key].forEach(function (key, i, arr) {
                 key[0].innerHTML = key[1].replace(/\{([\s\S]+?)\}/, val);
             });
@@ -194,7 +186,6 @@ var tpl = new Sv.component({
         }
         console.log(this);
   
-;
     }
 });
 // //测试一： this指向模型，与模型配置 //this 与模型this保持一致 
