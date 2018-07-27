@@ -17,7 +17,9 @@ function info(obj, msg) {
         info += key + " ";
     }
     console.log(info + "---" + msg);
-} /* 建立模型 */
+} 
+
+/* 建立模型 */
 Sv.model("component", function () {
     this.component = {
         ss: function () {
@@ -25,14 +27,10 @@ Sv.model("component", function () {
         }
     };
     this.action = function () {
-        var observe = {},
-            arr = [];
+        var observe = {},arr = [];
         var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
         var RegExp = /\{\{([\s\S]+?)\}\}/;
-
-        //@bind(html)
-        //@bind(attr)
-        //@bind(html,attr)
+        //@bind[attr(style)]
         var hasBind=function (attrs) {
             for (var i = 0; i < attrs.length ;i++){
                 if (/@bind/.test(attrs[i].nodeName) && attrs[i].nodeValue!='') {
@@ -85,32 +83,32 @@ Sv.model("component", function () {
             var bind = hasBind(key.attributes);
             if (bind) {
                 //@bind 句法定义
-                //bind.nodeName (@bind*)
                 //@bind[attr(style)]='css'
-                //@bind[html]='ht'
-                var changeAttr = bind.nodeName.match(RegExp2)[1];
+                //@bind[text]='ht'
+                var changeCon = bind.nodeName.match(RegExp2)[1];
                 var attrMap = bind.nodeValue.split(',');
-                if (/text/.test(changeAttr)) {
-                    console.info(changeAttr);
-                }
-                if (/attr/.test(changeAttr)) {
-                    var attrArg=changeAttr.match(RegExp3)[1];
-                    attrBind(attrArg)
-                }
-                // console.log(changeAttr,attrMap);
+                // if (/text/.test(changeCon)) {
+                //     // console.info(changeCon);
+                // }
+                // if (/attr/.test(changeCon)) {
+                //     var attrArg=changeCon.match(RegExp3)[1];
+                //     attrBind(attrArg)
+                // }
+                // console.log(changeCon);
+                // console.log(attrMap);
+                
                 //this.store赋值
                 for (var i = 0; i < attrMap.length;i++){
+
                     if (!this.store.hasOwnProperty(attrMap[i])) {
                         this.store[attrMap[i]]='';
                     }else{
                         console.error('Variables (' + attrMap[i] + ') already exist!');
-                        return;
                     }
                 };
 
-                // console.log(this.store);
                 var svtpl = key.svtpl = key.getAttribute("svtpl");
-                arr.push([attrMap, key, svtpl]);
+                arr.push([attrMap, key, svtpl,changeCon]);
                 attrMap.forEach(function (key, i, arr) {
                     if (!observe.hasOwnProperty(key)) {
                         observe[key] = [];
@@ -121,30 +119,33 @@ Sv.model("component", function () {
                 // key.removeAttribute("svbind");
                 // key.removeAttribute("svtpl");
                 // if (svtpl&&attrMap) {
-                 
-                console.log(arr);
-                    
+                //   console.log(arr);      
                 // console.log(observe);
                 
             };
             
         }.bind(this));
-
+        console.log(arr);
+        
         // analysis
         //映射对象 
-        // arr.forEach(function (key, i, arr) {
-        //     key[0].forEach(function (key2, i, arr){
-        //         observe[key2].push([key[1], key[2]]);
-        //     })
-            
-        // });
-        // console.log(observe); 
+        arr.forEach(function (key, i, arr) {
+            key[0].forEach(function (key2, i, arr){
+                var con=key[2].split(',');
+                observe[key2].push([key[1], con[i],key[3]]);
+            })
+        });
+        console.log(observe); 
 
         //监听修改 
         Sv.observe(this.store, this.store, null, setter);
-        function setter(val, key) {
-            observe[key].forEach(function (key, i, arr) {
-                key[0].innerHTML = key[1].replace(/\{([\s\S]+?)\}/, val);
+        function setter(val, key1) {
+            observe[key1].forEach(function (key, i, arr) {
+                if (key[2]=='text') {
+                    key[0].innerHTML = key[1].replace(/\{([\s\S]+?)\}/, val);
+                }else if(/attr/.test(key[2])){
+                    console.log(key[2].match(RegExp2)[1]);
+                }
             });
         }
     };
@@ -164,20 +165,22 @@ var tpl = new Sv.component({
     data: {
         k: "<script2>",
         s: "....0.000...",
-        b: 'bsbssbsbsbsbsbsbsb'
+        b: 'cccccccccccccc'
     },
     store: {
-        // k: "<script2>",
-        // s: "....0.000...",
-        // b: 'bsbssbsbsbsbsbsbsb'
+        k: "<script2>",
+        s: "....0.000...",
+        te1: 'bsbssbsbsbsbsbsbsb',
+        te2: 'lllllllll',
+        css:'css'
     },
-    tpl: '<div id="ss" style = "color:red" @bind[text]="te1,te2"> test{{b}}\
+    tpl:'<div id="ss" style = "color:red" @bind[text]="te1,te2">\
+            test{{b}}\
             <span @bind[attr(clientHeight)]>123</span>\
             <span>1234<a>aaaaaaaa<i></i></a></span>\
             {{s}}test\
         </div >\
-        <div @bind[attr(style)]="css">{{b}}<span @bind[attr(style)]="css">{{s}}</span></div>\
-        <div @bind[attr(style)]="css">122222222</div>',
+        <div @bind[attr(style)]="css">{{b}}<span @bind[attr(style)]="css">{{s}}</span></div>',
     init: function () {
         info(this, '!this is a "run" function 137');
         // console.log(this.tpl) 

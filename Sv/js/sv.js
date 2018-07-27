@@ -103,7 +103,7 @@ window['Sv'] = {
         this.controller = function () {
             var arg=arguments[0];
             var fn=arguments[1];
-            if (typeof arg=='string') {
+            if (arg=='ready') {
                 $(function () {
                     fn.call(model_o);
                 })
