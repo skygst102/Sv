@@ -63,16 +63,16 @@ Sv.model("component", function () {
                 //@bind 句法定义
                 //@bind[css]='css'
                 var changeCon = bind.nodeName.match(RegExp2)[1];
-                var getBindAttr = bind.nodeValue.split(',');
+                var bindAttr = bind.nodeValue.split(',');
                 var svtpl = key.svtpl = key.getAttribute("svtpl");
                 var attrs = key.attributes;
                 //this.store赋值
-                for (var i = 0; i < getBindAttr.length; i++) {
-                    this.store[getBindAttr[i]] = '';
+                for (var i = 0; i < bindAttr.length; i++) {
+                    this.store[bindAttr[i]] = '';
                 };
 
-                arr.push([getBindAttr, key, svtpl, changeCon]);
-                getBindAttr.forEach(function (key, i, arr) {
+                arr.push([bindAttr, key, svtpl, changeCon]);
+                bindAttr.forEach(function (key, i, arr) {
                     if (!observe.hasOwnProperty(key)) {
                         observe[key] = [];
                     }
