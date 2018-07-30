@@ -70,20 +70,19 @@ Sv.model("component", function () {
                 for (var i = 0; i < bindAttr.length; i++) {
                     this.store[bindAttr[i]] = '';
                 };
-
                 arr.push([bindAttr, key, svtpl, changeCon]);
                 bindAttr.forEach(function (key, i, arr) {
                     if (!observe.hasOwnProperty(key)) {
                         observe[key] = [];
                     }
                 });
-
                 for (var i = 0; i < attrs.length; i++) {
                     var valueName = attrs[i].name;
                     if (/@bind|svtpl/.test(valueName)) {
-                        key.removeAttribute(valueName)
+                        key.removeAttribute(valueName);
+                        i--;
                     }
-                }
+                };
             };
 
         }.bind(this));
@@ -147,7 +146,7 @@ var tpl = new Sv.component({
         </div >\
         <div @bind[css]="css">{{b}}<span @bind[css]="css">{{s}}</span></div>',
     init: function () {
-        info(this, '!this is a "run" function 137');
+        info(this, '!this is a "init" function 137');
         // console.log(this.tpl) 
         if (this.test.tt() == "tt") {
             console.log("调用成功");
