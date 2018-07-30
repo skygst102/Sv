@@ -30,7 +30,6 @@ Sv.model("component", function () {
         var observe = {},arr = [];
         var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
         var RegExp = /\{\{([\s\S]+?)\}\}/;
-        //@bind[attr(style)]
         var hasBind=function (attrs) {
             for (var i = 0; i < attrs.length ;i++){
                 if (/@bind/.test(attrs[i].nodeName) && attrs[i].nodeValue!='') {
@@ -66,19 +65,11 @@ Sv.model("component", function () {
         //编译模板
         var html = Sv.tplEngine(vdom.innerHTML, this.data); 
         document.querySelector(this.scope).innerHTML = html;
-
-        console.log(html);
-        
         //处理dom 
         var dom = document.querySelector(this.scope).querySelectorAll("*");
         var RegExp2 =/\[(.*)\]/;
         var RegExp3 =/\((.*)\)/;
-        var filterAttr='css,attr,nodeValue';
-        function attrBind(arg){
-            // console.warn(arg);
-            
-        }
-        
+       // var filterAttr='css,attr,nodeValue';
         [].slice.call(dom).forEach(function (key, i, self) {
             var bind = hasBind(key.attributes);
             if (bind) {
@@ -87,23 +78,12 @@ Sv.model("component", function () {
                 //@bind[text]='ht'
                 var changeCon = bind.nodeName.match(RegExp2)[1];
                 var getBindAttr = bind.nodeValue.split(',');
-                // if (/text/.test(changeCon)) {
-                //     // console.info(changeCon);
-                // }
-                // if (/attr/.test(changeCon)) {
-                //     var attrArg=changeCon.match(RegExp3)[1];
-                //     attrBind(attrArg)
-                // }
-                // console.log(changeCon);
-                // console.log(getBindAttr);
-                
                 //this.store赋值
                 for (var i = 0; i < getBindAttr.length;i++){
                     if (this.store.hasOwnProperty(getBindAttr[i])) {
                         this.store[getBindAttr[i]]='';
                     }
                 };
-
                 var svtpl = key.svtpl = key.getAttribute("svtpl");
                 arr.push([getBindAttr, key, svtpl,changeCon]);
                 getBindAttr.forEach(function (key, i, arr) {
@@ -115,15 +95,10 @@ Sv.model("component", function () {
                 // var nodes = key.childNodes;
                 // key.removeAttribute("svbind");
                 // key.removeAttribute("svtpl");
-                // if (svtpl&&attrMap) {
-                //   console.log(arr);      
-                // console.log(observe);
                 
             };
             
         }.bind(this));
-        console.log(arr);
-        
         // analysis
         //映射对象 
         arr.forEach(function (key, i, arr) {
@@ -133,18 +108,38 @@ Sv.model("component", function () {
             })
         });
         console.log(observe); 
+        var observeAction={
+            text:function (el,key,val){
+                el.childNodes[key[3]].nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
+            },
+            attr:function (el,key,val) {
+                var bindAttr=key[2].match(RegExp3)[1];
+                if (bindAttr=='style') {
+                    var style;
+                    if (typeof val=='object'&&!val.length) {
+                        style=JSON.stringify(val).replace(/,/,';').replace(/(\{")|("\})/g,'').replace(/":"/g,':');
+                    }
+                    el.style.cssText+=style;
+                }
+            }
+        };
 
         //监听修改 
         Sv.observe(this.store, this.store, null, setter);
-        function setter(val, key1) {
-            observe[key1].forEach(function (key, i, arr) {
+        function setter(val, setkey) {
+            observe[setkey].forEach(function (key, i, arr) {
                 if (key[2]=='text') {
-                    key[0].childNodes[key[3]].nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
+                    observeAction.text(key[0],key,val);
                 }else if(/attr/.test(key[2])){
-                    console.log(key[2].match(RegExp2)[1]);
+                    observeAction.attr(key[0],key,val);
                 }
             });
-        }
+        };
+
+        
+
+        
+        
     };
 });
 /* 建立模型 */
