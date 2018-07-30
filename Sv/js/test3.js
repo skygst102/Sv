@@ -21,7 +21,7 @@ Sv.model("component", function () {
         var RegExp = /\{\{([\s\S]+?)\}\}/;
         var hasBind = function (attrs) {
             for (var i = 0; i < attrs.length; i++) {
-                if (/@bind/.test(attrs[i].nodeName) && attrs[i].nodeValue != '') {
+                if (/@bind/.test(attrs[i].nodeName)) {
                     return attrs[i];
                 }
             }
@@ -49,7 +49,8 @@ Sv.model("component", function () {
                 }
             }
         }.bind(this));
-        console.log(vdom);
+        // console.log(vdom);
+        
         //编译模板
         var html = Sv.tplEngine(vdom.innerHTML, this.data);
         //插入模板
@@ -65,7 +66,8 @@ Sv.model("component", function () {
                 var changeCon = bind.nodeName.match(RegExp2)[1];
                 var bindAttr = bind.nodeValue.split(',');
                 var svtpl = key.svtpl = key.getAttribute("svtpl");
-                var attrs = key.attributes;
+                key.removeAttribute(bind.name);
+                key.removeAttribute("svtpl");
                 //this.store赋值
                 for (var i = 0; i < bindAttr.length; i++) {
                     this.store[bindAttr[i]] = '';
@@ -76,13 +78,6 @@ Sv.model("component", function () {
                         observe[key] = [];
                     }
                 });
-                for (var i = 0; i < attrs.length; i++) {
-                    var valueName = attrs[i].name;
-                    if (/@bind|svtpl/.test(valueName)) {
-                        key.removeAttribute(valueName);
-                        i--;
-                    }
-                };
             };
 
         }.bind(this));
@@ -140,7 +135,7 @@ var tpl = new Sv.component({
     },
     tpl: '<div id="ss" style = "color:red" @bind[text]="te1,te2">\
             te1{{b}}\
-            <span @bind[height]>123</span>\
+            <span @bind[height]>123{{s}}</span>\
             <span>1234<a>aaaaaaaa<i></i></a></span>\
             {{s}}te2\
         </div >\
