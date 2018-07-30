@@ -74,7 +74,7 @@ window['Sv'] = {
                 tpl: config.tpl.replace(/(\s){2}/g, ''),
                 tplUrl: config.tplUrl,
                 data: config.data,
-                store: config.store,
+                store: config.store||{},
                 scope: typeof config === 'string' ? config : config.scope,
             };
             if (config.extend && config.extend[0]) {
@@ -133,7 +133,7 @@ Sv.model("component", function () {
         var RegExp = /\{\{([\s\S]+?)\}\}/;
         var hasBind = function (attrs) {
             for (var i = 0; i < attrs.length; i++) {
-                if (/@bind/.test(attrs[i].nodeName)) {
+                if (/@bind/.test(attrs[i].nodeName)&&attrs[i].nodeValue!='') {
                     return attrs[i];
                 }
             }
@@ -178,7 +178,7 @@ Sv.model("component", function () {
                 var svtpl = key.svtpl = key.getAttribute("svtpl");
                 key.removeAttribute(bind.name);
                 key.removeAttribute("svtpl");
-                //this.store赋值
+                //this.store初始化
                 for (var i = 0; i < bindAttr.length; i++) {
                     this.store[bindAttr[i]] = '';
                 };
