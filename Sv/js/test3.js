@@ -86,7 +86,7 @@ Sv.model("component", function () {
                 //@bind[attr(style)]='css'
                 //@bind[text]='ht'
                 var changeCon = bind.nodeName.match(RegExp2)[1];
-                var attrMap = bind.nodeValue.split(',');
+                var getBindAttr = bind.nodeValue.split(',');
                 // if (/text/.test(changeCon)) {
                 //     // console.info(changeCon);
                 // }
@@ -95,21 +95,18 @@ Sv.model("component", function () {
                 //     attrBind(attrArg)
                 // }
                 // console.log(changeCon);
-                // console.log(attrMap);
+                // console.log(getBindAttr);
                 
                 //this.store赋值
-                for (var i = 0; i < attrMap.length;i++){
-
-                    if (!this.store.hasOwnProperty(attrMap[i])) {
-                        this.store[attrMap[i]]='';
-                    }else{
-                        console.error('Variables (' + attrMap[i] + ') already exist!');
+                for (var i = 0; i < getBindAttr.length;i++){
+                    if (this.store.hasOwnProperty(getBindAttr[i])) {
+                        this.store[getBindAttr[i]]='';
                     }
                 };
 
                 var svtpl = key.svtpl = key.getAttribute("svtpl");
-                arr.push([attrMap, key, svtpl,changeCon]);
-                attrMap.forEach(function (key, i, arr) {
+                arr.push([getBindAttr, key, svtpl,changeCon]);
+                getBindAttr.forEach(function (key, i, arr) {
                     if (!observe.hasOwnProperty(key)) {
                         observe[key] = [];
                     }
@@ -132,7 +129,7 @@ Sv.model("component", function () {
         arr.forEach(function (key, i, arr) {
             key[0].forEach(function (key2, i, arr){
                 var con=key[2].split(',');
-                observe[key2].push([key[1], con[i],key[3]]);
+                observe[key2].push([key[1], con[i],key[3],i]);
             })
         });
         console.log(observe); 
@@ -142,7 +139,7 @@ Sv.model("component", function () {
         function setter(val, key1) {
             observe[key1].forEach(function (key, i, arr) {
                 if (key[2]=='text') {
-                    key[0].innerHTML = key[1].replace(/\{([\s\S]+?)\}/, val);
+                    key[0].childNodes[key[3]].nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
                 }else if(/attr/.test(key[2])){
                     console.log(key[2].match(RegExp2)[1]);
                 }
@@ -175,10 +172,10 @@ var tpl = new Sv.component({
         css:'css'
     },
     tpl:'<div id="ss" style = "color:red" @bind[text]="te1,te2">\
-            test{{b}}\
+            te1{{b}}\
             <span @bind[attr(clientHeight)]>123</span>\
             <span>1234<a>aaaaaaaa<i></i></a></span>\
-            {{s}}test\
+            {{s}}te2\
         </div >\
         <div @bind[attr(style)]="css">{{b}}<span @bind[attr(style)]="css">{{s}}</span></div>',
     init: function () {
