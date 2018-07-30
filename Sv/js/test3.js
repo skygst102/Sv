@@ -114,13 +114,7 @@ Sv.model("component", function () {
             },
             attr:function (el,key,val) {
                 var bindAttr=key[2].match(RegExp3)[1];
-                if (bindAttr=='style') {
-                    var style;
-                    if (typeof val=='object'&&!val.length) {
-                        style=JSON.stringify(val).replace(/,/,';').replace(/(\{")|("\})/g,'').replace(/":"/g,':');
-                    }
-                    el.style.cssText+=style;
-                }
+                $(el)[bindAttr](val)
             }
         };
 
@@ -172,7 +166,7 @@ var tpl = new Sv.component({
             <span>1234<a>aaaaaaaa<i></i></a></span>\
             {{s}}te2\
         </div >\
-        <div @bind[attr(style)]="css">{{b}}<span @bind[attr(style)]="css">{{s}}</span></div>',
+        <div @bind[attr(css)]="css">{{b}}<span @bind[attr(css)]="css">{{s}}</span></div>',
     init: function () {
         info(this, '!this is a "run" function 137');
         // console.log(this.tpl) 
