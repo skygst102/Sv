@@ -6,109 +6,6 @@ function info(obj, msg) {
     }
     console.log(info + "---" + msg);
 }
-
-/* 建立模型 */
-Sv.model("component", function () {
-    this.component = {
-        ss: function () {
-            console.log("ss");
-        }
-    };
-    this.action = function () {
-        var observe = {},
-            arr = [];
-        var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
-        var RegExp = /\{\{([\s\S]+?)\}\}/;
-        var hasBind = function (attrs) {
-            for (var i = 0; i < attrs.length; i++) {
-                if (/@bind/.test(attrs[i].nodeName)) {
-                    return attrs[i];
-                }
-            }
-        };
-        //编译之前处理模板
-        ;[].slice.call(vdom.querySelectorAll("*")).forEach(function (key, i, self) {
-            var bind = hasBind(key.attributes);
-            if (bind) {
-                var nodes = key.childNodes;
-                if (nodes.length > 1) {
-                    var svtpl = [];
-                    for (var i = 0; i < nodes.length; i++) {
-                        if (nodes[i].nodeType == 3 && RegExp.test(nodes[i].nodeValue)) {
-                            svtpl.push(nodes[i].nodeValue.replace(RegExp, "{$1}").replace(/\s/g, ''));
-                        }
-                    }
-                } else {
-                    var nodeValue = key.childNodes[0].nodeValue;
-                    if (RegExp.test(nodeValue)) {
-                        var svtpl = nodeValue.replace(RegExp, "{$1}").replace(/\s/g, '');
-                    }
-                }
-                if (svtpl) {
-                    key.setAttribute("svtpl", svtpl);
-                }
-            }
-        }.bind(this));
-        // console.log(vdom);
-        
-        //编译模板
-        var html = Sv.tplEngine(vdom.innerHTML, this.data);
-        //插入模板
-        document.querySelector(this.scope).innerHTML = html;
-        //处理dom 
-        var dom = document.querySelector(this.scope).querySelectorAll("*");
-        var RegExp2 = /\[(.*)\]/;
-        [].slice.call(dom).forEach(function (key, i, self) {
-            var bind = hasBind(key.attributes);
-            if (bind) {
-                //@bind 句法定义
-                //@bind[css]='css'
-                var changeCon = bind.nodeName.match(RegExp2)[1];
-                var bindAttr = bind.nodeValue.split(',');
-                var svtpl = key.svtpl = key.getAttribute("svtpl");
-                key.removeAttribute(bind.name);
-                key.removeAttribute("svtpl");
-                //this.store赋值
-                for (var i = 0; i < bindAttr.length; i++) {
-                    this.store[bindAttr[i]] = '';
-                };
-                arr.push([bindAttr, key, svtpl, changeCon]);
-                bindAttr.forEach(function (key, i, arr) {
-                    if (!observe.hasOwnProperty(key)) {
-                        observe[key] = [];
-                    }
-                });
-            };
-
-        }.bind(this));
-        //映射对象 
-        arr.forEach(function (key, i, arr) {
-            key[0].forEach(function (key2, i, arr) {
-                var con = key[2].split(',');
-                observe[key2].push([key[1], con[i], key[3], i]);
-            })
-        });
-        var observeAction = {
-            text: function (el, key, val) {
-                el.childNodes[key[3]].nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
-            },
-            attr: function (el, key, val) {
-                $(el)[key[2]](val)
-            }
-        };
-        //监听修改 
-        Sv.observe(this.store, this.store, null, setter);
-        function setter(val, setkey) {
-            observe[setkey].forEach(function (key, i, arr) {
-                if (key[2] == 'text') {
-                    observeAction.text(key[0], key, val);
-                }else {
-                    observeAction.attr(key[0], key, val);
-                }
-            });
-        };
-    };
-});
 /* 建立模型 */
 Sv.model("test", function () {
     this.test = {
@@ -156,12 +53,9 @@ tpl.controller('ready', function () {
 
 })
 
+// 在浏览器console 内输入  tpl.store.css = {color:'red'} 可测试数据绑定效果
 
 
-// if (tpl.tpl) {
-//     info(tpl, '!this is a "tpl obj" function ')
-// }
-// 在浏览器console 内输入  tpl.store.k = '45646466' 可测试数据绑定效果
 // var tpl2 = new Sv.component({
 //     scope: '.tt',
 //     extend: [],
