@@ -1,4 +1,3 @@
-
 /**
  * author skygst
  * browser  >=ie9
@@ -72,8 +71,8 @@ window['Sv'] = {
     initModule: function (config, modelFn, modelName) {
         if (config) {
             var obj = {
-                tpl: config.tpl.replace(/(\s){2}/g,''),
-                tplUrl:config.tplUrl,
+                tpl: config.tpl.replace(/(\s){2}/g, ''),
+                tplUrl: config.tplUrl,
                 data: config.data,
                 store: config.store,
                 scope: typeof config === 'string' ? config : config.scope,
@@ -90,24 +89,26 @@ window['Sv'] = {
             })
             //将配置复制到构造函数
             for (var key in config) {
-                key=='tpl' ? config[key]=config[key].replace(/(\s){2}/g,''):null;
+                key == 'tpl' ? config[key] = config[key].replace(/(\s){2}/g, '') : null;
                 this[key] = config[key]
             };
 
             //实例化模型后使函数this 指向模型//执行配置函数
-            config.init ? config.init.call(model_o) :  null;
-            config.ready ? $(function(){config.ready.call(model_o)}) :  null;
-            
+            config.init ? config.init.call(model_o) : null;
+            config.ready ? $(function () {
+                config.ready.call(model_o)
+            }) : null;
+
         };
         //执行实例对象controller函数
         this.controller = function () {
-            var arg=arguments[0];
-            var fn=arguments[1];
-            if (arg=='ready') {
+            var arg = arguments[0];
+            var fn = arguments[1];
+            if (arg == 'ready') {
                 $(function () {
                     fn.call(model_o);
                 })
-            }else if(typeof arg=='function'){
+            } else if (typeof arg == 'function') {
                 arg.call(model_o);
             }
         };
@@ -119,6 +120,3 @@ window['Sv'] = {
         };
     }
 };
-
-
-
