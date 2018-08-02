@@ -55,11 +55,12 @@ tpl.controller('ready', function () {
    
     this.store.css={color: "red"};
     console.log(this.store.kv);
-    
+     
 })
 
 
 // 在浏览器console 内输入  tpl.store.css = {color:'red'} 可测试数据绑定效果
+
 
 
 // var tpl2 = new Sv.component({
