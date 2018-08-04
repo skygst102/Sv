@@ -23,14 +23,10 @@ var tpl = new Sv.component({
         s: "....0.000...",
         b: 'cccccccccccccc'
     },
-    // store:{},
-    store: {
-        // k: "<script2>",
-        // s: "....0.000...",
-        // te1: 'bsbssbsbsbsbsbsbsb',
-        // te2: 'lllllllll',
-        // css: 'css'
-    },
+    // store:{
+    //     css: 'css'
+    // },
+
     tpl: '<div id="ss" style = "color:red" @bind[text]="te1,te2">\
             te1{{b}}\
             <span @bind[height]>123{{s}}</span>\
@@ -52,11 +48,13 @@ var tpl = new Sv.component({
 // //测试一： this指向模型，与模型配置 //this 与模型this保持一致 
 tpl.controller('ready', function () {
     info(this, '!this is a "tpl.controller" function ')
-   
     this.store.css={color: "red"};
-    console.log(this.store.kv);
-     
+    this.store.te1='0.00012@@@@@'
+    console.log(this)
 })
+
+console.log(tpl.store)
+
 
 
 // 在浏览器console 内输入  tpl.store.css = {color:'red'} 可测试数据绑定效果

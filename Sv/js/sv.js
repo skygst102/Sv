@@ -74,7 +74,7 @@ window['Sv'] = {
                 tpl: config.tpl.replace(/(\s){2}/g, ''),
                 tplUrl: config.tplUrl,
                 data: config.data,
-                store: config.store||{},
+                store:config.store|| {},
                 scope: typeof config === 'string' ? config : config.scope,
             };
             if (config.extend && config.extend[0]) {
@@ -92,7 +92,10 @@ window['Sv'] = {
                 key == 'tpl' ? config[key] = config[key].replace(/(\s){2}/g, '') : null;
                 this[key] = config[key]
             };
-
+            //配置无store 时，在对象内取
+            if (!config.store) {
+                this.store=model_o.store;
+            }
             //实例化模型后使函数this 指向模型//执行配置函数
             config.init ? config.init.call(model_o) : null;
             config.ready ? $(function () {
