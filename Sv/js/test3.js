@@ -16,7 +16,7 @@ Sv.model("test", function () {
     };
 });
 var tpl = new Sv.component({
-    scope: "#dss",
+    scope: "#mm",
     extend: ["test"],
     data: {
         k: "<script2>",
@@ -27,13 +27,13 @@ var tpl = new Sv.component({
     //     css: 'css'
     // },
 
-    tpl: '<div id="ss" style = "color:red" @bind[text]="te1,te2">\
-            te1{{b}}\
-            <span @bind[height]>123{{s}}</span>\
-            <span>1234<a>aaaaaaaa<i></i></a></span>\
-            {{s}}te2\
-        </div >\
-        <div @bind[css]="css">{{b}}<span @bind[css]="css">{{s}}</span></div>',
+    // tpl: '<div id="ss" style = "color:red" @bind[text]="te1,te2">\
+    //         te1{{b}}\
+    //         <span @bind[height]>123{{s}}</span>\
+    //         <span>1234<a>aaaaaaaa<i></i></a></span>\
+    //         {{s}}te2\
+    //     </div >\
+    //     <div @bind[css]="css">{{b}}<span @bind[css]="css">{{s}}</span></div>',
     init: function () {
         info(this, '!this is a "init" function 137');
         // console.log(this.tpl) 
@@ -48,10 +48,20 @@ var tpl = new Sv.component({
 // //测试一： this指向模型，与模型配置 //this 与模型this保持一致 
 tpl.controller('ready', function () {
     info(this, '!this is a "tpl.controller" function ')
-    this.store.css={color: "red"};
+    this.store.css={color: "green"};
     this.store.te1='0.00012@@@@@'
     console.log(this)
+
+    $('#tt').on('input',function(){
+        console.log('55')
+        tpl.store.valuee=$(this).val()
+    })
+
 })
+
+
+
+
 
 console.log(tpl.store)
 

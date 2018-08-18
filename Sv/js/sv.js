@@ -71,7 +71,7 @@ window['Sv'] = {
     initModule: function (config, modelFn, modelName) {
         if (config) {
             var obj = {
-                tpl: config.tpl.replace(/(\s){2}/g, ''),
+                tpl: config.tpl? config.tpl.replace(/(\s){2}/g, ''):null,
                 tplUrl: config.tplUrl,
                 data: config.data,
                 store:config.store|| {},
@@ -154,14 +154,19 @@ Sv.model("component", function () {
                         }
                     }
                 } else {
-                    var nodeValue = key.childNodes[0].nodeValue;
+                    if (key.nodeName.toLocaleLowerCase()=='input') {
+                        var nodeValue = key.value;
+                    }else{
+                        var nodeValue = key.childNodes[0].nodeValue;
+                    }
+                    
                     if (RegExp.test(nodeValue)) {
                         var svtpl = nodeValue.replace(RegExp, "{$1}").replace(/\s/g, '');
+                    }else{
+                        var svtpl=nodeValue;
                     }
                 }
-                if (svtpl) {
-                    key.setAttribute("svtpl", svtpl);
-                }
+                key.setAttribute("svtpl", svtpl);
             }
         }.bind(this));
         //编译模板
@@ -178,7 +183,11 @@ Sv.model("component", function () {
                 //@bind[css]='css'
                 var changeCon = bind.nodeName.match(RegExp2)[1];
                 var bindAttr = bind.nodeValue.split(',');
-                var svtpl = key.svtpl = key.getAttribute("svtpl");
+                if (key.nodeName.toLocaleLowerCase()=='input') {
+                    var svtpl = key.svtpl = key.getAttribute("value");
+                }else{
+                    var svtpl = key.svtpl = key.getAttribute("svtpl");
+                }
                 key.removeAttribute(bind.name);
                 key.removeAttribute("svtpl");
                 //this.store初始化
@@ -205,7 +214,15 @@ Sv.model("component", function () {
                 el.childNodes[key[3]].nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
             },
             attr: function (el, key, val) {
-                $(el)[key[2]](val)
+                var attr=key[2];
+                switch (attr) {
+                    case 'value':
+                        attr='val';
+                        break;
+                    default:
+                        break;
+                }
+                $(el)[attr](val)
             }
         };
         //监听修改 
