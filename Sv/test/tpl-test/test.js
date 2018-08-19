@@ -19,18 +19,18 @@ var tpl = new Sv.component({
     scope: "#dss",
     extend: ["test"],
     data: {
-        k: "<script2>",
-        s: "....0.000...",
-        b: 'cccccccccccccc'
+        k: "{...我是data[k]...}",
+        s: "{...我是data[s]...}",
+        b: '{...我是data[b]...}'
     },
     // store:{
     //     css: 'css'
     // },
 
     tpl: '<div id="ss" style = "color:red" @bind[text]="te1,te2">\
-            te1{{b}}\
-            <span @bind[height]>123{{s}}</span>\
-            <span>1234<a>aaaaaaaa<i></i></a></span>\
+            te1{{b}}<br/>\
+            <span @bind[height]>(span标签内){{s}}</span><br/>\
+            <span>(span标签内)<a>(a标签内)<i></i></a></span><br/>\
             {{s}}te2\
         </div >\
         <div @bind[css]="css">{{b}}<span @bind[css]="css">{{s}}</span></div>',
@@ -49,7 +49,6 @@ var tpl = new Sv.component({
 tpl.controller('ready', function () {
     info(this, '!this is a "tpl.controller" function ')
     this.store.css={color: "green"};
-    this.store.te1='0.00012@@@@@'
     console.log(this)
 
 })
