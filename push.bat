@@ -1,4 +1,5 @@
 git add .
-git commit -m ''
+set /p m=请输入注释
+git commit -m m
 git push
 pause
