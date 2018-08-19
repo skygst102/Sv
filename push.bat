@@ -1,5 +1,5 @@
 git add .
-set /p m=è¯·è¾“å…¥æ³¨é‡Š
+set /p m='ÇëÊäÈë×¢ÊÍ:'
 git commit -m %m%
 git push
 pause
