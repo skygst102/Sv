@@ -48,11 +48,11 @@ window['Sv'] = {
     tplEngine: function (tpl, data) {
         var escape = function (html) {
             return String(html).replace(/&(?!\w+;)/g, '$amp;').replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
-                .replace(/\\/g, "").replace(/''/g, '');
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                .replace(/\\/g, "").replace(/''/g, '')
         }
         var complied = function (str) {
-            var tpl = str.replace(/\{\{\}\}|[\r\t\n]/g, '')
+            var tpl = str.replace(/\{\{\}\}|[\r\t\n]/g, '').replace(/'/g, '&#039;')
                 .replace(/\{\{([\s\S]+?)\}\}/g, function (match, value) {
                     return "' + escape(" + value + ")+ '"
                 }).replace(/<%([\s\S]+?)%>/g, function (match, value) {
@@ -131,7 +131,7 @@ Sv.model("component", function () {
         }
     };
     this.action = function () {
-        var observe = {},arr = [];
+        var observe = {},arr = [],objSelf=this;
         var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
         var RegExp = /\{\{([\s\S]+?)\}\}/;
         var hasBind = function (attrs) {
@@ -168,7 +168,7 @@ Sv.model("component", function () {
                 }
                 key.setAttribute("svtpl", svtpl);
             }
-        }.bind(this));
+        });
         //编译模板
         var html = Sv.tplEngine(vdom.innerHTML, this.data);
         //插入模板
@@ -208,6 +208,12 @@ Sv.model("component", function () {
                 var con = key[2].split(',');
                 observe[key2].push([key[1], con[i], key[3], i]);
             })
+            //监听input[value]实时更新绑定值
+            if (key[1].nodeName.toLocaleLowerCase()=='input') {
+                $(key[1]).on('input',function(){
+                    objSelf.store[key[0]] = $(this).val();
+                })
+            }
         });
         var observeAction = {
             text: function (el, key, val) {
@@ -218,8 +224,6 @@ Sv.model("component", function () {
                 switch (attr) {
                     case 'value':
                         attr='val';
-                        break;
-                    default:
                         break;
                 }
                 $(el)[attr](val)
