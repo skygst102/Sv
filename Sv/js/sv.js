@@ -216,7 +216,7 @@ Sv.model("component", function () {
             }
         });
         var observeAction = {
-            text: function (el, key, val) {
+            nodeValue: function (el, key, val) {
                 el.childNodes[key[3]].nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
             },
             attr: function (el, key, val) {
@@ -233,7 +233,7 @@ Sv.model("component", function () {
         Sv.observe(this.store, this.store, null, setter);
         function setter(val, setkey) {
             observe[setkey].forEach(function (key, i, arr) {
-                if (key[2] == 'text') {
+                if (key[2] == 'nodeValue') {
                     observeAction.text(key[0], key, val);
                 }else {
                     observeAction.attr(key[0], key, val);
