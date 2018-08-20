@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <link rel="stylesheet" href="../../css/explain.css">
     <script src="../../js/zepto.js"></script>
     <script src="../../js/sv.js"></script>
     <script src="./test.js"></script>
   
 </head>
 <body>
-
+    <p class="explain">input输入内容进行双向绑定测试</p>
     <div id="mm">
         <input type="text" value="" @bind[value]='val' id="tt">
         <p @bind[html]='val'>我跟input内容同步</p>
