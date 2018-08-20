@@ -27,7 +27,7 @@ var tpl = new Sv.component({
     //     css: 'css'
     // },
 
-    tpl: '<div id="ss" style = "color:red" @bind[text]="te1,te2">\
+    tpl: '<div id="ss" style = "color:red" @bind[nodeValue]="te1,te2">\
             te1{{b}}<br/>\
             <span @bind[height]>(span标签内){{s}}</span><br/>\
             <span>(span标签内)<a>(a标签内)<i></i></a></span><br/>\
