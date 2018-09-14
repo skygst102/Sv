@@ -15,6 +15,8 @@ Sv.model("test", function () {
         }
     };
 });
+
+
 var tpl = new Sv.component({
     scope: "#dss",
     extend: ["test"],

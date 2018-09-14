@@ -132,7 +132,6 @@ Sv.model("component", function () {
     };
     this.action = function () {
         var observe = {},arr = [],objSelf=this;
-        var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
         var RegExp = /\{\{([\s\S]+?)\}\}/;
         var hasBind = function (attrs) {
             for (var i = 0; i < attrs.length; i++) {
@@ -141,7 +140,8 @@ Sv.model("component", function () {
                 }
             }
         };
-        //编译之前处理模板
+        var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
+        //编译之前处理模板//记录元素绑定属性
         ;[].slice.call(vdom.querySelectorAll("*")).forEach(function (key, i, self) {
             var bind = hasBind(key.attributes);
             if (bind) {
@@ -166,6 +166,7 @@ Sv.model("component", function () {
                         var svtpl=nodeValue;
                     }
                 }
+                //将元素模板记录至元素属性
                 key.setAttribute("svtpl", svtpl);
             }
         });
@@ -176,7 +177,7 @@ Sv.model("component", function () {
         //处理dom 
         var dom = document.querySelector(this.scope).querySelectorAll("*");
         var RegExp2 = /\[(.*)\]/;
-        [].slice.call(dom).forEach(function (key, i, self) {
+        ;[].slice.call(dom).forEach(function (key, i, self) {
             var bind = hasBind(key.attributes);
             if (bind) {
                 //@bind 句法定义
@@ -217,7 +218,15 @@ Sv.model("component", function () {
         });
         var observeAction = {
             nodeValue: function (el, key, val) {
-                el.childNodes[key[3]].nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
+                var j=-1;
+                el.childNodes.forEach(function(keyVal,i,self){
+                    if (keyVal.nodeType===3) {
+                        j++;
+                    }
+                    if (j===key[3]) {
+                        keyVal.nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
+                    }
+                })
             },
             attr: function (el, key, val) {
                 var attr=key[2];
@@ -230,15 +239,15 @@ Sv.model("component", function () {
             }
         };
         //监听修改 
-        Sv.observe(this.store, this.store, null, setter);
-        function setter(val, setkey) {
+        Sv.observe(this.store, this.store, null, function setter(val, setkey) {
             observe[setkey].forEach(function (key, i, arr) {
-                if (key[2] == 'nodeValue') {
-                    observeAction.text(key[0], key, val);
+                if (key[2].toLocaleLowerCase() == 'nodevalue') {
+                    observeAction.nodeValue(key[0], key, val);
                 }else {
                     observeAction.attr(key[0], key, val);
                 }
             });
-        };
+        });
+        
     };
 });
