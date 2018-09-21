@@ -12,7 +12,7 @@ window['Sv'] = {
         })
         Object.defineProperty(mapdata, key, {
             enumerable: true,
-            initurable: true,
+            configurable: true,
             get: function () {
                 getter ? getter(val, key) : null;
                 return obj[key];
@@ -59,82 +59,59 @@ window['Sv'] = {
     tplEngine: function (tpl, data) {
         var escape = function (html) {
             return String(html).replace(/&(?!\w+;)/g, '$amp;').replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
                 .replace(/\\/g, "").replace(/''/g, '')
         }
-        var complied = function (str) {//.replace(/\{\{\}\}|[\r\t\n]/g, '')
-            var tpl = str.replace(/\{\{#([\s\S]+?)\}\}/g, function (match, value) {
-              
-                    return "';\n" + value ;
-                })
-                .replace(/\{\{([^#]+?)\}/g, function (match, value) {
-                   
-                    return "tpl+='+ escape(" + value + ")+ '"
-                   
-                })
-               
-                .replace(/<%([\s\S]+?)%>/g, function (match, value) {
-                    return "';\n" + value + "\n'";
-                })
-                console.log(tpl)
-           
+        var complied = function (str) {
+            var tpl = str.replace(/\{\{\}\}|[\r\t\n]/g, '').replace(/'/g, '&#039;')
+                .replace(/\{\{([\s\S]+?)\}\}/g, function (match, value) {
+                    return "' + escape(" + value + ")+ '"
+                }).replace(/<%([\s\S]+?)%>/g, function (match, value) {
+                    return "';\n" + value + "\ntpl+='";
+                }).replace(/(tpl\+=\'\';)/g, '');
             tpl = "tpl='" + tpl + "';";
-            tpl = 'var tpl="";\nwith(escapeObj||{}){\n' + tpl + '\n}\nreturn tpl;';
-            return new Function('escapeObj', 'escape', tpl);
+            tpl = 'var tpl="";\nwith(obj||{}){\n' + tpl + '\n}\nreturn tpl;';
+            return new Function('obj', 'escape', tpl);
         };
         var Engine = function (tpl, data) {
             var tpl = complied(tpl)
-            console.log(tpl)
             return tpl(data, escape);
         }
         return Engine(tpl, data)
     },
-    initModule: function (init, modelFn, modelName) {
-        if (typeof init=='function') {
+    initModule: function (config, modelFn, modelName) {
+        if (config) {
             var obj = {
-                scope:function (id) {
-                    console.log(arguments);
-                    
-                },
-                data: function (url,config) {
-                    console.log(arguments);
-                    
-                },
-                view:function (params) {
-                    console.log(arguments);
-                    
-                },
-                extend:function (/* str||[] */) {
-                    var arg=arguments;
-                    if (arg[0] instanceof Array) {
-                        arg=arg[0];
-                    }
-                    ;[].slice.call(arg).forEach(function (key, i, self) {
-                        obj[key] = Sv[key + 'Extend']
-                    })
-                },
-                store:function (watch) {
-                    var re=typeof watch==='object' ? watch :{};
-                    return re;
-                },
+                tpl: config.tpl? config.tpl.replace(/(\s){2}/g, ''):null,
+                tplUrl: config.tplUrl,
+                data: config.data,
+                store:config.store|| {},
+                scope: typeof config === 'string' ? config : config.scope,
             };
-            init.call(obj);
-
+            if (config.extend && config.extend[0]) {
+                config.extend.forEach(function (key, i, self) {
+                    obj[key] = Sv[key + 'Extend']
+                })
+            };
             modelFn.prototype = obj;
-            var model= new modelFn();
+            var model_o = new modelFn();
             $(function () {
-                model.action();
+                model_o.action();
             })
             //将配置复制到构造函数
-            // for (var key in init) {
-            //     key == 'tpl' ? init[key] = init[key].replace(/(\s){2}/g, '') : null;
-            //     this[key] = init[key]
-            // };
-            //实例化模型后使函数this 指向模型
-            // init.call(model);
-            // init.ready ? $(function () {
-            //     init.ready.call(model)
-            // }) : null;
+            for (var key in config) {
+                key == 'tpl' ? config[key] = config[key].replace(/(\s){2}/g, '') : null;
+                this[key] = config[key]
+            };
+            //配置无store 时，在对象内取
+            if (!config.store) {
+                this.store=model_o.store;
+            }
+            //实例化模型后使函数this 指向模型//执行配置函数
+            config.init ? config.init.call(model_o) : null;
+            config.ready ? $(function () {
+                config.ready.call(model_o)
+            }) : null;
 
         };
         //执行实例对象controller函数
@@ -143,17 +120,17 @@ window['Sv'] = {
             var fn = arguments[1];
             if (arg == 'ready') {
                 $(function () {
-                    fn.call(model);
+                    fn.call(model_o);
                 })
             } else if (typeof arg == 'function') {
-                arg.call(model);
+                arg.call(model_o);
             }
         };
     },
     model: function (modelName, modelFn) {
         Sv[modelName + 'Extend'] = new modelFn()[modelName];
-        Sv[modelName] = function (init) {
-            Sv.initModule.call(this, init, modelFn, modelName)
+        Sv[modelName] = function (config) {
+            Sv.initModule.call(this, config, modelFn, modelName)
         };
     }
 };
@@ -164,11 +141,9 @@ Sv.model("component", function () {
             console.log("ss");
         }
     };
-<<<<<<< HEAD
-    this.action = function () {//可优化，页面未加载或者未加载完毕时处理
+    this.action = function () {
         var observe = {},arr = [],objSelf=this;
-        var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
-        var RegExp = /\{\{([\s\S]+?)\}\}/g;
+        var RegExp = /\{\{([\s\S]+?)\}\}/;
         var hasBind = function (attrs) {
             for (var i = 0; i < attrs.length; i++) {
                 if (/@bind/.test(attrs[i].nodeName)&&attrs[i].nodeValue!='') {
@@ -176,7 +151,8 @@ Sv.model("component", function () {
                 }
             }
         };
-        //编译之前处理模板
+        var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
+        //编译之前处理模板//记录元素绑定属性
         ;[].slice.call(vdom.querySelectorAll("*")).forEach(function (key, i, self) {
             var bind = hasBind(key.attributes);
             if (bind) {
@@ -201,24 +177,18 @@ Sv.model("component", function () {
                         var svtpl=nodeValue;
                     }
                 }
+                //将元素模板记录至元素属性
                 key.setAttribute("svtpl", svtpl);
             }
         });
-=======
-    this.action = function () {
-        console.log(this);
-
-       
->>>>>>> 869db5d549dc153171fe23d1cc91dd2ac49436cd
         //编译模板
-        // var html = Sv.tplEngine(vdom.innerHTML, this.data);
+        var html = Sv.tplEngine(vdom.innerHTML, this.data);
         //插入模板
-        // document.querySelector(this.scope).innerHTML = html;
+        document.querySelector(this.scope).innerHTML = html;
         //处理dom 
-<<<<<<< HEAD
         var dom = document.querySelector(this.scope).querySelectorAll("*");
         var RegExp2 = /\[(.*)\]/;
-        [].slice.call(dom).forEach(function (key, i, self) {
+        ;[].slice.call(dom).forEach(function (key, i, self) {
             var bind = hasBind(key.attributes);
             if (bind) {
                 //@bind 句法定义
@@ -232,7 +202,7 @@ Sv.model("component", function () {
                 }
                 key.removeAttribute(bind.name);
                 key.removeAttribute("svtpl");
-                //this.store初始化//待优化
+                //this.store初始化
                 for (var i = 0; i < bindAttr.length; i++) {
                     this.store[bindAttr[i]] = '';
                 };
@@ -259,7 +229,15 @@ Sv.model("component", function () {
         });
         var observeAction = {
             nodeValue: function (el, key, val) {
-                el.childNodes[key[3]].nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
+                var j=-1;
+                el.childNodes.forEach(function(keyVal,i,self){
+                    if (keyVal.nodeType===3) {
+                        j++;
+                    }
+                    if (j===key[3]) {
+                        keyVal.nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
+                    }
+                })
             },
             attr: function (el, key, val) {
                 var attr=key[2];
@@ -272,21 +250,15 @@ Sv.model("component", function () {
             }
         };
         //监听修改 
-        Sv.observe(this.store, this.store, null, setter);
-        function setter(val, setkey) {
+        Sv.observe(this.store, this.store, null, function setter(val, setkey) {
             observe[setkey].forEach(function (key, i, arr) {
-                if (key[2] == 'nodeValue') {
-                    observeAction.text(key[0], key, val);
+                if (key[2].toLocaleLowerCase() == 'nodevalue') {
+                    observeAction.nodeValue(key[0], key, val);
                 }else {
                     observeAction.attr(key[0], key, val);
                 }
             });
-        };
-=======
-        // var dom = document.querySelector(this.scope).querySelectorAll("*");
-    
+        });
         
-        
->>>>>>> 869db5d549dc153171fe23d1cc91dd2ac49436cd
     };
 });
