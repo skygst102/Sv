@@ -108,7 +108,7 @@ window['Sv'] = {
                     return re;
                 },
             };
-            init.call(obj)
+            init.call(obj);
 
             modelFn.prototype = obj;
             var model= new modelFn();
@@ -120,15 +120,11 @@ window['Sv'] = {
             //     key == 'tpl' ? init[key] = init[key].replace(/(\s){2}/g, '') : null;
             //     this[key] = init[key]
             // };
-            //配置无store 时，在对象内取
-            if (!init.store) {
-                this.store=model.store;
-            }
-            //实例化模型后使函数this 指向模型//执行配置函数
-            init ? init.call(model) : null;
-            init.ready ? $(function () {
-                init.ready.call(model)
-            }) : null;
+            //实例化模型后使函数this 指向模型
+            // init.call(model);
+            // init.ready ? $(function () {
+            //     init.ready.call(model)
+            // }) : null;
 
         };
         //执行实例对象controller函数
@@ -159,8 +155,7 @@ Sv.model("component", function () {
         }
     };
     this.action = function () {
-        console.log(this.scope);
-        console.log(this.data); 
+        console.log(this);
 
        
         //编译模板
