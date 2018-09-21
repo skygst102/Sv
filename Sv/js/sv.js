@@ -164,129 +164,15 @@ Sv.model("component", function () {
             console.log("ss");
         }
     };
-<<<<<<< HEAD
-    this.action = function () {//可优化，页面未加载或者未加载完毕时处理
-        var observe = {},arr = [],objSelf=this;
-        var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
-        var RegExp = /\{\{([\s\S]+?)\}\}/g;
-        var hasBind = function (attrs) {
-            for (var i = 0; i < attrs.length; i++) {
-                if (/@bind/.test(attrs[i].nodeName)&&attrs[i].nodeValue!='') {
-                    return attrs[i];
-                }
-            }
-        };
-        //编译之前处理模板
-        ;[].slice.call(vdom.querySelectorAll("*")).forEach(function (key, i, self) {
-            var bind = hasBind(key.attributes);
-            if (bind) {
-                var nodes = key.childNodes;
-                if (nodes.length > 1) {
-                    var svtpl = [];
-                    for (var i = 0; i < nodes.length; i++) {
-                        if (nodes[i].nodeType == 3 && RegExp.test(nodes[i].nodeValue)) {
-                            svtpl.push(nodes[i].nodeValue.replace(RegExp, "{$1}").replace(/\s/g, ''));
-                        }
-                    }
-                } else {
-                    if (key.nodeName.toLocaleLowerCase()=='input') {
-                        var nodeValue = key.value;
-                    }else{
-                        var nodeValue = key.childNodes[0].nodeValue;
-                    }
-                    
-                    if (RegExp.test(nodeValue)) {
-                        var svtpl = nodeValue.replace(RegExp, "{$1}").replace(/\s/g, '');
-                    }else{
-                        var svtpl=nodeValue;
-                    }
-                }
-                key.setAttribute("svtpl", svtpl);
-            }
-        });
-=======
     this.action = function () {
         console.log(this);
 
        
->>>>>>> 869db5d549dc153171fe23d1cc91dd2ac49436cd
         //编译模板
         // var html = Sv.tplEngine(vdom.innerHTML, this.data);
         //插入模板
         // document.querySelector(this.scope).innerHTML = html;
         //处理dom 
-<<<<<<< HEAD
-        var dom = document.querySelector(this.scope).querySelectorAll("*");
-        var RegExp2 = /\[(.*)\]/;
-        [].slice.call(dom).forEach(function (key, i, self) {
-            var bind = hasBind(key.attributes);
-            if (bind) {
-                //@bind 句法定义
-                //@bind[css]='css'
-                var changeCon = bind.nodeName.match(RegExp2)[1];
-                var bindAttr = bind.nodeValue.split(',');
-                if (key.nodeName.toLocaleLowerCase()=='input') {
-                    var svtpl = key.svtpl = key.getAttribute("value");
-                }else{
-                    var svtpl = key.svtpl = key.getAttribute("svtpl");
-                }
-                key.removeAttribute(bind.name);
-                key.removeAttribute("svtpl");
-                //this.store初始化//待优化
-                for (var i = 0; i < bindAttr.length; i++) {
-                    this.store[bindAttr[i]] = '';
-                };
-                arr.push([bindAttr, key, svtpl, changeCon]);
-                bindAttr.forEach(function (key, i, arr) {
-                    if (!observe.hasOwnProperty(key)) {
-                        observe[key] = [];
-                    }
-                });
-            };
-        }.bind(this));
-        //映射对象 
-        arr.forEach(function (key, i, arr) {
-            key[0].forEach(function (key2, i, arr) {
-                var con = key[2].split(',');
-                observe[key2].push([key[1], con[i], key[3], i]);
-            })
-            //监听input[value]实时更新绑定值
-            if (key[1].nodeName.toLocaleLowerCase()=='input') {
-                $(key[1]).on('input',function(){
-                    objSelf.store[key[0]] = $(this).val();
-                })
-            }
-        });
-        var observeAction = {
-            nodeValue: function (el, key, val) {
-                el.childNodes[key[3]].nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
-            },
-            attr: function (el, key, val) {
-                var attr=key[2];
-                switch (attr) {
-                    case 'value':
-                        attr='val';
-                        break;
-                }
-                $(el)[attr](val)
-            }
-        };
-        //监听修改 
-        Sv.observe(this.store, this.store, null, setter);
-        function setter(val, setkey) {
-            observe[setkey].forEach(function (key, i, arr) {
-                if (key[2] == 'nodeValue') {
-                    observeAction.text(key[0], key, val);
-                }else {
-                    observeAction.attr(key[0], key, val);
-                }
-            });
-        };
-=======
-        // var dom = document.querySelector(this.scope).querySelectorAll("*");
-    
-        
-        
->>>>>>> 869db5d549dc153171fe23d1cc91dd2ac49436cd
+
     };
 });
