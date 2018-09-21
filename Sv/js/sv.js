@@ -12,7 +12,7 @@ window['Sv'] = {
         })
         Object.defineProperty(mapdata, key, {
             enumerable: true,
-            configurable: true,
+            initurable: true,
             get: function () {
                 getter ? getter(val, key) : null;
                 return obj[key];
@@ -45,6 +45,17 @@ window['Sv'] = {
         }
         return vdom;
     },
+    each: function (obj, fn) {
+        if (typeof obj==='object'&&!(obj instanceof Array)) {
+            for (var key in obj) fn.call(obj, obj[key], i, obj);
+        } else if (obj.length) {
+            for (var i = 0; i < obj.length; i++) {
+                var rFn = fn.call(obj, obj[i], i, obj);
+                if (rFn === false) break;
+                if (rFn === true) continue;
+            }
+        }
+    },
     tplEngine: function (tpl, data) {
         var escape = function (html) {
             return String(html).replace(/&(?!\w+;)/g, '$amp;').replace(/</g, '&lt;')
@@ -68,38 +79,55 @@ window['Sv'] = {
         }
         return Engine(tpl, data)
     },
-    initModule: function (config, modelFn, modelName) {
-        if (config) {
+    initModule: function (init, modelFn, modelName) {
+        if (typeof init=='function') {
             var obj = {
-                tpl: config.tpl? config.tpl.replace(/(\s){2}/g, ''):null,
-                tplUrl: config.tplUrl,
-                data: config.data,
-                store:config.store|| {},
-                scope: typeof config === 'string' ? config : config.scope,
+                scope:function (id) {
+                    console.log(arguments);
+                    
+                },
+                data: function (url,config) {
+                    console.log(arguments);
+                    
+                },
+                view:function (params) {
+                    console.log(arguments);
+                    
+                },
+                extend:function (/* str||[] */) {
+                    var arg=arguments;
+                    if (arg[0] instanceof Array) {
+                        arg=arg[0];
+                    }
+                    ;[].slice.call(arg).forEach(function (key, i, self) {
+                        obj[key] = Sv[key + 'Extend']
+                    })
+                },
+                store:function (watch) {
+                    var re=typeof watch==='object' ? watch :{};
+                    return re;
+                },
             };
-            if (config.extend && config.extend[0]) {
-                config.extend.forEach(function (key, i, self) {
-                    obj[key] = Sv[key + 'Extend']
-                })
-            };
+            init.call(obj)
+
             modelFn.prototype = obj;
-            var model_o = new modelFn();
+            var model= new modelFn();
             $(function () {
-                model_o.action();
+                model.action();
             })
             //将配置复制到构造函数
-            for (var key in config) {
-                key == 'tpl' ? config[key] = config[key].replace(/(\s){2}/g, '') : null;
-                this[key] = config[key]
-            };
+            // for (var key in init) {
+            //     key == 'tpl' ? init[key] = init[key].replace(/(\s){2}/g, '') : null;
+            //     this[key] = init[key]
+            // };
             //配置无store 时，在对象内取
-            if (!config.store) {
-                this.store=model_o.store;
+            if (!init.store) {
+                this.store=model.store;
             }
             //实例化模型后使函数this 指向模型//执行配置函数
-            config.init ? config.init.call(model_o) : null;
-            config.ready ? $(function () {
-                config.ready.call(model_o)
+            init ? init.call(model) : null;
+            init.ready ? $(function () {
+                init.ready.call(model)
             }) : null;
 
         };
@@ -109,17 +137,17 @@ window['Sv'] = {
             var fn = arguments[1];
             if (arg == 'ready') {
                 $(function () {
-                    fn.call(model_o);
+                    fn.call(model);
                 })
             } else if (typeof arg == 'function') {
-                arg.call(model_o);
+                arg.call(model);
             }
         };
     },
     model: function (modelName, modelFn) {
         Sv[modelName + 'Extend'] = new modelFn()[modelName];
-        Sv[modelName] = function (config) {
-            Sv.initModule.call(this, config, modelFn, modelName)
+        Sv[modelName] = function (init) {
+            Sv.initModule.call(this, init, modelFn, modelName)
         };
     }
 };
@@ -131,123 +159,18 @@ Sv.model("component", function () {
         }
     };
     this.action = function () {
-        var observe = {},arr = [],objSelf=this;
-        var RegExp = /\{\{([\s\S]+?)\}\}/;
-        var hasBind = function (attrs) {
-            for (var i = 0; i < attrs.length; i++) {
-                if (/@bind/.test(attrs[i].nodeName)&&attrs[i].nodeValue!='') {
-                    return attrs[i];
-                }
-            }
-        };
-        var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
-        //编译之前处理模板//记录元素绑定属性
-        ;[].slice.call(vdom.querySelectorAll("*")).forEach(function (key, i, self) {
-            var bind = hasBind(key.attributes);
-            if (bind) {
-                var nodes = key.childNodes;
-                if (nodes.length > 1) {
-                    var svtpl = [];
-                    for (var i = 0; i < nodes.length; i++) {
-                        if (nodes[i].nodeType == 3 && RegExp.test(nodes[i].nodeValue)) {
-                            svtpl.push(nodes[i].nodeValue.replace(RegExp, "{$1}").replace(/\s/g, ''));
-                        }
-                    }
-                } else {
-                    if (key.nodeName.toLocaleLowerCase()=='input') {
-                        var nodeValue = key.value;
-                    }else{
-                        var nodeValue = key.childNodes[0].nodeValue;
-                    }
-                    
-                    if (RegExp.test(nodeValue)) {
-                        var svtpl = nodeValue.replace(RegExp, "{$1}").replace(/\s/g, '');
-                    }else{
-                        var svtpl=nodeValue;
-                    }
-                }
-                //将元素模板记录至元素属性
-                key.setAttribute("svtpl", svtpl);
-            }
-        });
+        console.log(this.scope);
+        console.log(this.data); 
+
+       
         //编译模板
-        var html = Sv.tplEngine(vdom.innerHTML, this.data);
+        // var html = Sv.tplEngine(vdom.innerHTML, this.data);
         //插入模板
-        document.querySelector(this.scope).innerHTML = html;
+        // document.querySelector(this.scope).innerHTML = html;
         //处理dom 
-        var dom = document.querySelector(this.scope).querySelectorAll("*");
-        var RegExp2 = /\[(.*)\]/;
-        ;[].slice.call(dom).forEach(function (key, i, self) {
-            var bind = hasBind(key.attributes);
-            if (bind) {
-                //@bind 句法定义
-                //@bind[css]='css'
-                var changeCon = bind.nodeName.match(RegExp2)[1];
-                var bindAttr = bind.nodeValue.split(',');
-                if (key.nodeName.toLocaleLowerCase()=='input') {
-                    var svtpl = key.svtpl = key.getAttribute("value");
-                }else{
-                    var svtpl = key.svtpl = key.getAttribute("svtpl");
-                }
-                key.removeAttribute(bind.name);
-                key.removeAttribute("svtpl");
-                //this.store初始化
-                for (var i = 0; i < bindAttr.length; i++) {
-                    this.store[bindAttr[i]] = '';
-                };
-                arr.push([bindAttr, key, svtpl, changeCon]);
-                bindAttr.forEach(function (key, i, arr) {
-                    if (!observe.hasOwnProperty(key)) {
-                        observe[key] = [];
-                    }
-                });
-            };
-        }.bind(this));
-        //映射对象 
-        arr.forEach(function (key, i, arr) {
-            key[0].forEach(function (key2, i, arr) {
-                var con = key[2].split(',');
-                observe[key2].push([key[1], con[i], key[3], i]);
-            })
-            //监听input[value]实时更新绑定值
-            if (key[1].nodeName.toLocaleLowerCase()=='input') {
-                $(key[1]).on('input',function(){
-                    objSelf.store[key[0]] = $(this).val();
-                })
-            }
-        });
-        var observeAction = {
-            nodeValue: function (el, key, val) {
-                var j=-1;
-                el.childNodes.forEach(function(keyVal,i,self){
-                    if (keyVal.nodeType===3) {
-                        j++;
-                    }
-                    if (j===key[3]) {
-                        keyVal.nodeValue = key[1].replace(/\{([\s\S]+?)\}/, val);
-                    }
-                })
-            },
-            attr: function (el, key, val) {
-                var attr=key[2];
-                switch (attr) {
-                    case 'value':
-                        attr='val';
-                        break;
-                }
-                $(el)[attr](val)
-            }
-        };
-        //监听修改 
-        Sv.observe(this.store, this.store, null, function setter(val, setkey) {
-            observe[setkey].forEach(function (key, i, arr) {
-                if (key[2].toLocaleLowerCase() == 'nodevalue') {
-                    observeAction.nodeValue(key[0], key, val);
-                }else {
-                    observeAction.attr(key[0], key, val);
-                }
-            });
-        });
+        // var dom = document.querySelector(this.scope).querySelectorAll("*");
+    
+        
         
     };
 });
