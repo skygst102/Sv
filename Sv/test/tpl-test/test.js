@@ -15,6 +15,21 @@ Sv.model("test", function () {
         }
     };
 });
+var obj={
+    t:'1',
+    b:'2'
+}
+
+var tpll='\
+<div id="ss" style = "color:red" @bind[nodeValue]="te1,te2">\
+{{# if(obj.t==="1"){console.log("111")}}\
+te1{{b}}<br/>\
+{{# }}}\
+<span @bind[height]>(span标签内){{s}}</span><br/>\
+<span>(span标签内)<a>(a标签内)<i></i></a></span><br/>\
+{{s}}te2\
+</div >\
+<div @bind[css]="css">{{b}}<span @bind[css]="css">{{s}}</span></div>'
 var tpl = new Sv.component({
     scope: "#dss",
     extend: ["test"],
@@ -27,13 +42,7 @@ var tpl = new Sv.component({
     //     css: 'css'
     // },
 
-    tpl: '<div id="ss" style = "color:red" @bind[nodeValue]="te1,te2">\
-            te1{{b}}<br/>\
-            <span @bind[height]>(span标签内){{s}}</span><br/>\
-            <span>(span标签内)<a>(a标签内)<i></i></a></span><br/>\
-            {{s}}te2\
-        </div >\
-        <div @bind[css]="css">{{b}}<span @bind[css]="css">{{s}}</span></div>',
+    tpl: tpll,
     init: function () {
         info(this, '!this is a "init" function 137');
         // console.log(this.tpl) 

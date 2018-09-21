@@ -48,22 +48,32 @@ window['Sv'] = {
     tplEngine: function (tpl, data) {
         var escape = function (html) {
             return String(html).replace(/&(?!\w+;)/g, '$amp;').replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
                 .replace(/\\/g, "").replace(/''/g, '')
         }
-        var complied = function (str) {
-            var tpl = str.replace(/\{\{\}\}|[\r\t\n]/g, '').replace(/'/g, '&#039;')
-                .replace(/\{\{([\s\S]+?)\}\}/g, function (match, value) {
-                    return "' + escape(" + value + ")+ '"
-                }).replace(/<%([\s\S]+?)%>/g, function (match, value) {
-                    return "';\n" + value + "\ntpl+='";
-                }).replace(/(tpl\+=\'\';)/g, '');
+        var complied = function (str) {//.replace(/\{\{\}\}|[\r\t\n]/g, '')
+            var tpl = str.replace(/\{\{#([\s\S]+?)\}\}/g, function (match, value) {
+              
+                    return "';\n" + value ;
+                })
+                .replace(/\{\{([^#]+?)\}/g, function (match, value) {
+                   
+                    return "tpl+='+ escape(" + value + ")+ '"
+                   
+                })
+               
+                .replace(/<%([\s\S]+?)%>/g, function (match, value) {
+                    return "';\n" + value + "\n'";
+                })
+                console.log(tpl)
+           
             tpl = "tpl='" + tpl + "';";
-            tpl = 'var tpl="";\nwith(obj||{}){\n' + tpl + '\n}\nreturn tpl;';
-            return new Function('obj', 'escape', tpl);
+            tpl = 'var tpl="";\nwith(escapeObj||{}){\n' + tpl + '\n}\nreturn tpl;';
+            return new Function('escapeObj', 'escape', tpl);
         };
         var Engine = function (tpl, data) {
             var tpl = complied(tpl)
+            console.log(tpl)
             return tpl(data, escape);
         }
         return Engine(tpl, data)
@@ -130,10 +140,10 @@ Sv.model("component", function () {
             console.log("ss");
         }
     };
-    this.action = function () {
+    this.action = function () {//可优化，页面未加载或者未加载完毕时处理
         var observe = {},arr = [],objSelf=this;
         var vdom = Sv.vdom(this.tpl || document.querySelector(this.scope).innerHTML);
-        var RegExp = /\{\{([\s\S]+?)\}\}/;
+        var RegExp = /\{\{([\s\S]+?)\}\}/g;
         var hasBind = function (attrs) {
             for (var i = 0; i < attrs.length; i++) {
                 if (/@bind/.test(attrs[i].nodeName)&&attrs[i].nodeValue!='') {
@@ -190,7 +200,7 @@ Sv.model("component", function () {
                 }
                 key.removeAttribute(bind.name);
                 key.removeAttribute("svtpl");
-                //this.store初始化
+                //this.store初始化//待优化
                 for (var i = 0; i < bindAttr.length; i++) {
                     this.store[bindAttr[i]] = '';
                 };
