@@ -34,12 +34,33 @@
 </body>
 
 
+<script id="listTemp" type="text/html">
+    {{# Sv.each(d,function(key,index,self){ }}
+		<div class="cloumn box">
+	        <p>
+	          <a href="" target="_blank" >
+	              <img src="" width="218" height="123" />
+	          </a>
+	        </p>
+	        <p class="part text-hide">
+	            <a href="" title="{{self.name}}" target="_blank">{{self.name}}</a>
+	            {{# if(index==3){ }}
+	            <label class="orange">{{self.score}}分</label>
+	            {{# };}}
+	        </p>
+            <p class="part f12">
+                <a class="transtion-font" href="web/teacher/course/teach_info?teachId={{self.teachId}}" target="_blank">{{self.teacherName ? self.teacherName : '无'}}</a>
+                <font class="part f12">{{self.jobTitleName}}</font>
+	            <span class="right"><i></i>{{self.userCounts}}</span>
+	        </p>
+	    </div>
+
+    {{# }); }}
+</script> 
+
+
 <script>
-
-
-
-
-    
+//  
 </script>
 
 </html>

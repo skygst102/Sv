@@ -62,47 +62,49 @@ window['Sv'] = {
                 .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
                 .replace(/\\/g, "").replace(/''/g, '')
         }
-        var complied = function (str) {//.replace(/\{\{\}\}|[\r\t\n]/g, '')
-            var tpl = str.replace(/\{\{#([\s\S]+?)\}\}/g, function (match, value) {
-              
-                    return "';\n" + value ;
+        var complied = function (str) {
+            var tpl = str.replace(/\{\{\}\}|[\r\t\n]|[\s]{2}/g, '').replace(/'/g,'"')
+                .replace(/\{\{#([\s\S]+?)\}\}/g, function (match, value) {
+                    return "';\n"+ value+"\ntpl+='" ;
                 })
-                .replace(/\{\{([^#]+?)\}/g, function (match, value) {
-                   
-                    return "tpl+='+ escape(" + value + ")+ '"
-                   
+                .replace(/\{\{([^#]+?)\}\}/g, function (match, value) {
+                    return "'+ escape(" + value + ") +' "
                 })
-               
                 .replace(/<%([\s\S]+?)%>/g, function (match, value) {
-                    return "';\n" + value + "\n'";
+                    return value;
                 })
-                console.log(tpl)
-           
-            tpl = "tpl='" + tpl + "';";
-            tpl = 'var tpl="";\nwith(escapeObj||{}){\n' + tpl + '\n}\nreturn tpl;';
-            return new Function('escapeObj', 'escape', tpl);
+            tpl ="tpl='"+tpl + "';";
+            tpl = 'var tpl="";\n' + tpl + '\nreturn tpl;';
+            return new Function('d', 'escape','Sv', tpl);
         };
         var Engine = function (tpl, data) {
             var tpl = complied(tpl)
-            console.log(tpl)
-            return tpl(data, escape);
+            return tpl(data, escape,Sv);
         }
         return Engine(tpl, data)
     },
     initModule: function (init, modelFn, modelName) {
-        if (typeof init=='function') {
+        if (typeof init=='function'&&modelName=='component') {
+            var _scope,_model;
             var obj = {
                 scope:function (id) {
-                    console.log(arguments);
-                    
+                    _scope=id;
                 },
                 data: function (url,config) {
-                    console.log(arguments);
+                    return {
+                        cover:'cover',
+                        name:'name',
+                        score:'score',
+                        teacherName:'teacherName',
+                        jobTitleName:'jobTitleName',
+                        userCounts:'userCounts'
+                    }
                     
                 },
-                view:function (params) {
-                    console.log(arguments);
-                    
+                view:function (tempId,data) {
+                    var dom=document.querySelector(tempId||_scope+'Temp');
+                    var html=Sv.tplEngine(dom.innerHTML,data||this.data());
+                    document.querySelector(_scope).innerHTML=html;
                 },
                 extend:function (/* str||[] */) {
                     var arg=arguments;
@@ -118,24 +120,14 @@ window['Sv'] = {
                     return re;
                 },
             };
-            init.call(obj);
-
             modelFn.prototype = obj;
-            var model= new modelFn();
-            $(function () {
-                model.action();
+            $(function(){
+                _model= new modelFn();
+                //执行实例函数并继承obj
+                init.call(obj);
+                /*执行模型action方法 */
+                _model.action();
             })
-            //将配置复制到构造函数
-            // for (var key in init) {
-            //     key == 'tpl' ? init[key] = init[key].replace(/(\s){2}/g, '') : null;
-            //     this[key] = init[key]
-            // };
-            //实例化模型后使函数this 指向模型
-            // init.call(model);
-            // init.ready ? $(function () {
-            //     init.ready.call(model)
-            // }) : null;
-
         };
         //执行实例对象controller函数
         this.controller = function () {
@@ -143,10 +135,10 @@ window['Sv'] = {
             var fn = arguments[1];
             if (arg == 'ready') {
                 $(function () {
-                    fn.call(model);
+                    fn.call(_model);
                 })
             } else if (typeof arg == 'function') {
-                arg.call(model);
+                arg.call(_model);
             }
         };
     },

@@ -16,47 +16,6 @@ Sv.model("test", function () {
     };
     // this.action=function () {}//默认被执行
 });
-<<<<<<< HEAD
-var obj={
-    t:'1',
-    b:'2'
-}
-
-var tpll='\
-<div id="ss" style = "color:red" @bind[nodeValue]="te1,te2">\
-{{# if(obj.t==="1"){console.log("111")}}\
-te1{{b}}<br/>\
-{{# }}}\
-<span @bind[height]>(span标签内){{s}}</span><br/>\
-<span>(span标签内)<a>(a标签内)<i></i></a></span><br/>\
-{{s}}te2\
-</div >\
-<div @bind[css]="css">{{b}}<span @bind[css]="css">{{s}}</span></div>'
-var tpl = new Sv.component({
-    scope: "#dss",
-    extend: ["test"],
-    data: {
-        k: "{...我是data[k]...}",
-        s: "{...我是data[s]...}",
-        b: '{...我是data[b]...}'
-    },
-    // store:{
-    //     css: 'css'
-    // },
-
-    tpl: tpll,
-    init: function () {
-        info(this, '!this is a "init" function 137');
-        // console.log(this.tpl) 
-        if (this.test.tt() == "tt") {
-            console.log("调用成功");
-        }
-      
-        this.store.kv='kv123检验煤的仪器';
-    },
-  
-});
-=======
 // scope:'',
 // extend: ["test"],
 // // data: {//url || 数据 ||function 
@@ -69,31 +28,29 @@ var tpl = new Sv.component({
 // // },
 
 var tpl = new Sv.component(function () {
-        // console.log(this) 
-        // if (this.test.tt() == "tt") {
-        //     console.log("调用成功");
-        // }
-        console.log(this);
-        
+    console.log(this)
         this.scope("#dss");
         this.data('url',{
             type:'get',
             cache:true
         })
-        this.view('id',this.data)
+        this.view('#listTemp')
         this.extend('test','tt2')
-        
     });
->>>>>>> 869db5d549dc153171fe23d1cc91dd2ac49436cd
-// //测试一： this指向模型，与模型配置 //this 与模型this保持一致 
+// //测试一： this指向模型，//this 与模型this保持一致 
 tpl.controller('ready', function () {
+    console.log(this)
     info(this, '!this is a "tpl.controller" function ')
     this.store.css={color: "green"};
-    console.info(this)
+  
     // this.view=function (list){
     //this.view(data).before(function(){
 
     // })
+
+    // if (this.test.tt() == "tt") {
+    //     console.log("调用成功");
+    // }
 
 });
 
