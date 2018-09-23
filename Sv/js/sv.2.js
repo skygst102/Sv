@@ -84,11 +84,8 @@ window['Sv'] = {
         return Engine(tpl, data)
     },
     initModule: function (init, modelFn, modelName) {
-        var _model,_self=this,_controller;
-        this.$scope='';
-        this.scope=function (id) {
-            _self.$scope=id;
-        },
+        var _model,_self=this
+        this.el='';
         this.extend=function (/* str||[] */) {
             var arg=arguments;
             if (arg[0] instanceof Array) {
@@ -102,29 +99,28 @@ window['Sv'] = {
             var re=typeof watch==='object' ? watch :{};
             return re;
         }
-        //将配置复制到构造函数
-        var model=new modelFn().init()
-        for (var key in model) {
-            this[key] = model[key]
-           
-        };
-        
-        init.call(this);
         //执行实例对象controller函数
         this.controller = function () {
             var arg = arguments[0];
             var fn = arguments[1];
-            _controller=function(){
-                if (arg == 'ready') {
+            if (arg == 'ready') {
+                $(function () {
                     fn.call(_self);
-                } else if (typeof arg == 'function') {
-                    arg.call(_self);
-                }
+                })
+            } else if (typeof arg == 'function') {
+                arg.call(_self);
             }
         };
         $(function(){
-            _controller();
-            _self.$scope=model.global.scope
+            _model=new modelFn().init();
+            _model.extend=_self.extend;
+            _model.store=_self.store;
+            _model.global.scope=_self.el;
+
+            //执行实例函数并继承模型init
+            init.call(_model);
+            /*执行模型init方法,操作元素 */
+            // _model.init();
         })
     },
     model: function (modelName, modelFn) {
@@ -141,39 +137,29 @@ Sv.model("component", function () {
             console.log("ss");
         }
     };
-    this.init = function () { 
-        console.log('init')
-        console.log(this)
+    this.init = function () {
         return {
-            global:{'_scope':'','_data':''},
+            global:{_scope:''},
             scope:function (id) {
                 this.global._scope=id;
             },
             data: function (url,config) {
-                if (url) {
-                    this.global._data= {
-                        cover:'cover',
-                        name:'name',
-                        score:'score',
-                        teacherName:'teacherName',
-                        jobTitleName:'jobTitleName',
-                        userCounts:'userCounts'
-                    }
+                return {
+                    cover:'cover',
+                    name:'name',
+                    score:'score',
+                    teacherName:'teacherName',
+                    jobTitleName:'jobTitleName',
+                    userCounts:'userCounts'
                 }
-                return this.global._data;
-                
             },
             render:function (tempId,data) {
-                var _self=this;
-                $(function(){
-                    var dom=document.querySelector(tempId||_self.global._scope+'Temp');
-                    var html=Sv.tplEngine(dom.innerHTML,data||_self.global._data);
-                    document.querySelector(_self.global._scope).innerHTML=html;
-                })
-                
+                var dom=document.querySelector(tempId||this.global._scope+'Temp');
+                var html=Sv.tplEngine(dom.innerHTML,data||this.data());
+                document.querySelector(this.global._scope).innerHTML=html;
             }
-   
-        }
+        };
+       
         //编译模板
         // var html = Sv.tplEngine(vdom.innerHTML, this.data);
         //插入模板
