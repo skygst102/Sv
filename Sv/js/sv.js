@@ -85,7 +85,6 @@ window['Sv'] = {
     },
     initModule: function (init, modelFn, modelName) {
         var _model,_self=this,_controller;
-        this.$scope='';
         this.scope=function (id) {
             _self.$scope=id;
         },
@@ -106,9 +105,7 @@ window['Sv'] = {
         var model=new modelFn().init()
         for (var key in model) {
             this[key] = model[key]
-           
         };
-        
         init.call(this);
         //执行实例对象controller函数
         this.controller = function () {
@@ -117,14 +114,14 @@ window['Sv'] = {
             _controller=function(){
                 if (arg == 'ready') {
                     fn.call(_self);
-                } else if (typeof arg == 'function') {
+                }else if (typeof arg == 'function') {
                     arg.call(_self);
                 }
             }
         };
+        this.$scope=model.global;
         $(function(){
             _controller();
-            _self.$scope=model.global.scope
         })
     },
     model: function (modelName, modelFn) {
@@ -146,7 +143,7 @@ Sv.model("component", function () {
         console.log(this)
         return {
             global:{'_scope':'','_data':''},
-            scope:function (id) {
+            scope:function (id) { console.log('2')
                 this.global._scope=id;
             },
             data: function (url,config) {
@@ -161,7 +158,6 @@ Sv.model("component", function () {
                     }
                 }
                 return this.global._data;
-                
             },
             render:function (tempId,data) {
                 var _self=this;
@@ -170,9 +166,7 @@ Sv.model("component", function () {
                     var html=Sv.tplEngine(dom.innerHTML,data||_self.global._data);
                     document.querySelector(_self.global._scope).innerHTML=html;
                 })
-                
             }
-   
         }
         //编译模板
         // var html = Sv.tplEngine(vdom.innerHTML, this.data);

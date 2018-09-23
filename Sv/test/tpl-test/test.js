@@ -23,19 +23,20 @@ var tpl = new Sv.component(function () {
     /* 指向模型init */
         this.extend('test','tt2')
         this.scope("#dss");
-        console.log(this.data('url',{
+        this.data('url',{
             type:'get',
             cache:true
-        }))
+        })
         this.render('#listTemp')
         
     });
 // //测试一： this指向模型，//this 与模型this保持一致 
 tpl.controller('ready', function () {
     console.info('controller---指向“模型”')
-    console.log(this.$scope._scope)
+    console.log(this.$scope)
     //this.pull('data')
     console.log(this.test)
+    
     this.store.css={color: "green"};
     // this.view=function (list){
     //this.view(data).before(function(){
