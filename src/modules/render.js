@@ -1,4 +1,5 @@
 import { Exception } from "./Exception";
+//指令
 function directive(dom, content, arr, compObj) {
     let input = {
         event: 'oninput',
@@ -12,6 +13,7 @@ function directive(dom, content, arr, compObj) {
         }, false)
     }
 }
+/* state 信息 */
 function parallelism(keyName, compObj, tagName, id, type, key, value, parallelism_flash) {
     let vo = {
         tagName: tagName,

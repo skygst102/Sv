@@ -223,7 +223,9 @@ Sv.use = function (comParam, arg) {
                     if (isString(template)) { template = htmlToVnode(template); }
                     parentEl.appendChild(Sv.render(template, componentObj, Sv.config));
                     /* 在第一次渲染后调用 */
-                    componentObj.componentAfterMount ? componentObj.componentAfterMount() : null;
+                    if (componentObj.componentAfterMount) {
+                        componentObj.componentAfterMount();
+                    }
                 }
 
                 /* 在渲染前调用 */
