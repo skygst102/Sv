@@ -5,16 +5,16 @@ class componentStore {
         this.current = props.current
         this.props = props
     }
-    set(o,pipelineName) {
-        if (pipelineName) {
+    set(o,sign) {
+        if (sign) {
             let pipeline = this.current.localStorage.getItem(this.props._pipelineSign);
             let obj=JSON.parse(pipeline);
-            if (!obj[pipelineName]) {
-                obj[pipelineName]={};
+            if (!obj[sign]) {
+                obj[sign]={};
             }
-            let store=obj[pipelineName];
+            let store=obj[sign];
             Object.assign(store,o);
-            Object.assign(obj,{[pipelineName] : store});
+            Object.assign(obj,{[sign] : store});
             this.current.localStorage.setItem(this.props._pipelineSign,JSON.stringify(obj));
             return obj;
         } else {
@@ -26,12 +26,12 @@ class componentStore {
         }
 
     }
-    get(key,pipelineName) {
+    get(key,sign) {
         let store;
-        if (pipelineName) {
+        if (sign) {
             let pipeline = this.current.localStorage.getItem(this.props._pipelineSign);
             let obj=JSON.parse(pipeline);
-            store=obj[pipelineName];
+            store=obj[sign];
 
         } else {
             store = this.current.localStorage.getItem(this.props._global_store_sign);

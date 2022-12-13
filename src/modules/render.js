@@ -13,7 +13,7 @@ function directive(dom, content, arr, compObj) {
         }, false)
     }
 }
-/* state 信息 */
+/* 绑定的state 信息 */
 function parallelism(keyName, compObj, tagName, id, type, key, value, parallelism_flash) {
     let vo = {
         tagName: tagName,
@@ -22,6 +22,7 @@ function parallelism(keyName, compObj, tagName, id, type, key, value, parallelis
         key: type === 'text' ? '' : key,
         value: value,
     }
+
     let parallelism = compObj.parallelism[keyName];
     let parallelism_f = parallelism_flash[keyName];
     if (!parallelism && !parallelism_f) {

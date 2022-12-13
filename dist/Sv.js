@@ -42,17 +42,17 @@ class componentStore {
     this.current = props.current;
     this.props = props;
   }
-  set(o, pipelineName) {
-    if (pipelineName) {
+  set(o, sign) {
+    if (sign) {
       let pipeline = this.current.localStorage.getItem(this.props._pipelineSign);
       let obj = JSON.parse(pipeline);
-      if (!obj[pipelineName]) {
-        obj[pipelineName] = {};
+      if (!obj[sign]) {
+        obj[sign] = {};
       }
-      let store = obj[pipelineName];
+      let store = obj[sign];
       Object.assign(store, o);
       Object.assign(obj, {
-        [pipelineName]: store
+        [sign]: store
       });
       this.current.localStorage.setItem(this.props._pipelineSign, JSON.stringify(obj));
       return obj;
@@ -64,12 +64,12 @@ class componentStore {
       return this.current.localStorage[this.props._global_store_sign];
     }
   }
-  get(key, pipelineName) {
+  get(key, sign) {
     let store;
-    if (pipelineName) {
+    if (sign) {
       let pipeline = this.current.localStorage.getItem(this.props._pipelineSign);
       let obj = JSON.parse(pipeline);
-      store = obj[pipelineName];
+      store = obj[sign];
     } else {
       store = this.current.localStorage.getItem(this.props._global_store_sign);
     }
@@ -82,6 +82,7 @@ class componentStore {
   }
 }
 
+//指令
 function directive(dom, content, arr, compObj) {
   let input = {
     event: 'oninput'
@@ -97,6 +98,7 @@ function directive(dom, content, arr, compObj) {
     }, false);
   }
 }
+/* 绑定的state 信息 */
 function parallelism(keyName, compObj, tagName, id, type, key, value, parallelism_flash) {
   let vo = {
     tagName: tagName,
@@ -326,19 +328,24 @@ Sv.components = {};
 Sv.Component = Component;
 Sv.render = render;
 // Sv._pipeline=[];
-// Sv.domReadyFn=[];
-
+Sv.domReadyFn = [];
 Sv._init = [function () {
   Sv.config.current.localStorage.removeItem(Sv.config._global_store_sign);
 }, function () {
   Sv.globalStorage = new componentStore(Sv.config);
   Sv.globalStorage.init();
+}, function () {
+  document.addEventListener('DOMContentLoaded', function () {
+    Sv.domReadyFn.forEach(fn => {
+      fn();
+    });
+  }, false);
 }];
 Sv.mergeConfig = function (o) {
   Object.assign(Sv.config, o);
 };
 Sv.domReady = function (fn) {
-  document.addEventListener('DOMContentLoaded', fn, false);
+  Sv.domReadyFn.push(fn);
 };
 Sv.registerModule = function (mName, fn) {
   if (isString(mName) && isFunction(fn)) {
@@ -366,7 +373,7 @@ Sv.registerComponent = function (...cName) {
     }
   });
 };
-Sv.defineProperty = function (Wobj, setFn, getFn, key) {
+Sv.defineProperty = function (Wobj, key, setFn, getFn) {
   if (key) {
     wacth(Wobj, key);
   } else {
@@ -403,194 +410,243 @@ Sv.defineProperty = function (Wobj, setFn, getFn, key) {
 // }
 Sv.use = function (comParam, arg) {
   let _componentList = {};
-  Sv.domReady(function () {
-    if (isString(comParam)) {
-      let componentObj = Sv.components[comParam];
-      if (!componentObj) {
-        Exception.error('[ ' + comParam + ' ] 组件未注册');
+
+  // Sv.domReady(function () {
+  if (isString(comParam)) {
+    let componentObj = Sv.components[comParam];
+    if (!componentObj) {
+      Exception.error('[ ' + comParam + ' ] 组件未注册');
+      _componentList = false;
+      return;
+    }
+  }
+  if (isObject(comParam)) {
+    /* 初始化对象 */
+    let comParamList = Object.entries(comParam);
+    for (let index = 0; index < comParamList.length; index++) {
+      let compName = comParamList[index][0];
+      let value = comParamList[index][1];
+      let component = Sv.components[compName];
+      if (component) {
+        let obj = new component(value);
+        obj.state = Object.assign(obj.state || {}, {});
+        obj.store = Object.assign(obj.store || {}, {});
+        obj.props = Object.assign(obj.props || {}, value);
+        obj.parallelism = {};
+        obj._pipeline = {};
+        obj._status = 'init';
+        obj._name = compName;
+        obj._parentNode = obj.props._el || '';
+        /*  */
+        Sv.defineProperty(obj.state, null, function (key, value) {
+          parallelism('state_' + key, value, obj);
+        });
+        // Sv.defineProperty(obj.store);
+        // Sv.defineProperty(obj.props);
+        _componentList[compName] = obj;
+      } else {
+        Exception.error('[ ' + compName + ' ] 组件未注册');
         _componentList = false;
         return;
       }
     }
-    if (isObject(comParam)) {
-      /* 初始化对象 */
-      let comParamList = Object.entries(comParam);
-      for (let index = 0; index < comParamList.length; index++) {
-        let compName = comParamList[index][0];
-        let value = comParamList[index][1];
-        let component = Sv.components[compName];
-        if (component) {
-          let obj = new component(value);
-          obj.state = Object.assign(obj.state || {}, {});
-          obj.store = Object.assign(obj.store || {}, {});
-          obj.props = Object.assign(obj.props || {}, value);
-          obj._pipeline = {};
-          obj.parallelism = {};
-          obj._name = compName;
-          obj._parentNode = obj.props._el || '';
-          /*  */
-          Sv.defineProperty(obj.state, function (key, value) {
-            parallelism('state_' + key, value, obj);
-          });
-          Sv.defineProperty(obj.store);
-          Sv.defineProperty(obj.props);
-          _componentList[compName] = obj;
+    /* 实例添加方法 */
+    for (let key in _componentList) {
+      let componentObj = _componentList[key];
+      componentObj.setStore = (o, type) => {
+        if (isObject(o)) {
+          Object.assign(componentObj.store, o);
+          if (type === true) {
+            Sv.globalStorage.set(o, componentObj._name + '_store');
+          }
         } else {
-          Exception.error('[ ' + compName + ' ] 组件未注册');
-          _componentList = false;
-          return;
+          Exception.error('setStore 参数必须是对象');
         }
-      }
-      /* 实例添加方法 */
-      for (let key in _componentList) {
-        let componentObj = _componentList[key];
-        componentObj.setStore = (o, type) => {
+      };
+      componentObj.getStore = (key, type) => {
+        if (isString(key)) {
+          return componentObj.store[key];
+        }
+        if (type === true) {
+          return Sv.globalStorage.get(key, componentObj._name + '_store');
+        }
+      };
+      componentObj.setState = obj => {
+        // _updateStateList.push(obj)
+
+        if (isObject(obj)) {
+          let _in = {},
+            _su = {};
+          {
+            for (const key in obj) {
+              //state存在更新，不存在取出
+              if (componentObj.state[key]) {
+                _in['_' + key + '_'] = obj[key];
+              } else {
+                _su[key] = obj[key];
+              }
+            }
+            Object.assign(componentObj.state, Object.assign(_in, _su));
+          }
+          {
+            /* 监听新值 */
+            for (let key in _su) {
+              if (key) {
+                Sv.defineProperty(componentObj.state, key, function (key, value) {
+                  parallelism('state_' + key, value, componentObj);
+                });
+              }
+            }
+          }
+        }
+      };
+      componentObj.getState = key => {
+        let res = componentObj.state[key];
+        return res;
+      };
+      componentObj.getComponent = name => {
+        return {
+          getState: _componentList[name].getState,
+          getStore: _componentList[name].getStore,
+          setState: _componentList[name].setState,
+          setStore: _componentList[name].setStore,
+          props: _componentList[name].props,
+          state: _componentList[name].state,
+          store: _componentList[name].store
+        };
+      };
+      componentObj.pipeline = {
+        set: function (o) {
           if (isObject(o)) {
-            Object.assign(componentObj.store, o);
-            if (type === true) {
-              Sv.globalStorage.set(o);
+            if (componentObj.pipelineName) {
+              Object.assign(componentObj._pipeline, o);
+              return Sv.globalStorage.set(o, componentObj.pipelineName);
             }
           } else {
-            Exception.error('setStore 参数必须是对象');
+            Exception.error('pipeline.set 参数必须是对象');
           }
-        };
-        componentObj.getStore = (key, type) => {
-          if (isString(key)) {
-            return componentObj.store[key];
+        },
+        get: function (key) {
+          if (isString(key) && componentObj.pipelineName) {
+            return Sv.globalStorage.get(key, componentObj.pipelineName);
           }
-          if (type === true) {
-            return Sv.globalStorage.get(key);
+        }
+      };
+      if (componentObj.template) {
+        /* 在挂载前调用 */
+        if (componentObj.componentMount) {
+          componentObj._status = 'componentMount';
+          let res = componentObj.componentMount();
+          if (res) {
+            return res;
           }
-        };
-        componentObj.setState = obj => {
-          if (isObject(obj)) {
-            let _in = {},
-              _su = {};
-            {
-              for (const key in obj) {
-                if (componentObj.state[key]) {
-                  _in['_' + key + '_'] = obj[key];
-                } else {
-                  _su[key] = obj[key];
-                }
-              }
-              Object.assign(componentObj.state, Object.assign(_in, _su));
-            }
-            {
-              /* 监听新值 */
-              for (let key in _su) {
-                if (key) {
-                  Sv.defineProperty(componentObj.state, function (key, value) {
-                    parallelism('state_' + key, value, componentObj);
-                  }, null, key);
-                }
-              }
-            }
-          }
-        };
-        componentObj.getState = key => {
-          return componentObj.state[key];
-        };
-        componentObj.getComponent = name => {
-          return {
-            getState: _componentList[name].getState,
-            getStore: _componentList[name].getStore,
-            setState: _componentList[name].setState,
-            setStore: _componentList[name].setStore,
-            props: _componentList[name].props,
-            state: _componentList[name].state,
-            store: _componentList[name].store
-          };
-        };
-        componentObj.pipeline = {
-          set: function (o) {
-            if (isObject(o)) {
-              if (componentObj.pipelineName) {
-                Object.assign(componentObj._pipeline, o);
-                return Sv.globalStorage.set(o, componentObj.pipelineName);
-              }
-            } else {
-              Exception.error('pipeline.set 参数必须是对象');
-            }
-          },
-          get: function (key) {
-            if (isString(key) && componentObj.pipelineName) {
-              return Sv.globalStorage.get(key, componentObj.pipelineName);
-            }
-          }
-        };
-        if (componentObj.template) {
+        }
+        Sv.domReady(function () {
           let parentEl = componentObj.props._el ? document.querySelector(componentObj.props._el) : null;
           let template = componentObj.template();
+          let vnode;
+          let html;
           if (isString(template)) {
-            template = htmlToVnode(template);
+            vnode = htmlToVnode(template);
           }
-          parentEl.appendChild(Sv.render(template, componentObj, Sv.config));
-          /* 在第一次渲染后调用 */
-          componentObj.componentAfterMount ? componentObj.componentAfterMount() : null;
-        }
+          /* 生成dom */
+          html = Sv.render(vnode, componentObj, Sv.config);
+          componentObj._html = html;
+          /* 在渲染前调用 */
+          if (componentObj.componentBeforeRender) {
+            componentObj._status = 'componentBeforeRender';
+            let res = componentObj.componentBeforeRender(html);
+            if (res) {
+              if (isObject(res) && res.html) {
+                html = res.html;
+              } else {
+                return res;
+              }
+            }
+          }
+          /* 插入dom */
+          parentEl.appendChild(html);
 
-        /* 在渲染前调用 */
-        if (componentObj.componentBeforeRemove) {
-          componentObj.componentBeforeRender();
-        }
+          /* 在渲染后调用 */
+          if (componentObj.componentAfterRender) {
+            componentObj._status = 'componentAfterRender';
+            componentObj.componentAfterRender();
+          }
 
-        /* 在组件完成更新后立即调用。在初始化时不会被调用 */
-        // componentObj.componentAfterUpdate();
-        /* 组件从 DOM 中移除之前被调用 */
-        if (componentObj.componentBeforeRemove) {
-          componentObj.componentBeforeRemove();
-        }
-      }
-    }
-    function parallelism(key, value, compObj) {
-      let parentEl = compObj.props['_el'];
-      typeof parentEl == 'string' ? parentEl = document.querySelector(parentEl) : null;
-      compObj.parallelism[key].forEach(o => {
-        let sign = 'sv_sign_id="' + o.id + '"';
-        let el = parentEl.querySelector('[data-' + sign + ']');
-        let content = analysis(compObj, {
-          value: o.value
+          /* 在组件完成更新后立即调用。在初始化时不会被调用 */
+          if (componentObj.componentAfterUpdate) {
+            componentObj._status = 'componentAfterUpdate';
+            componentObj.componentAfterUpdate();
+          }
+
+          /* 组件从 DOM 中卸载被调用 */
+          if (componentObj.componentUnMount) {
+            componentObj._status = 'componentUnMount';
+            componentObj.componentUnMount();
+          }
         });
-        switch (o.type) {
-          case 'attribute':
-            if (o.key == 'class') {
-              let _class = el.getAttribute('class') || '';
-              _class = _class.replace(content, '');
-              _class = _class == '' ? '' : _class + ' ';
-              el.setAttribute('class', _class + value);
-            }
-            if (o.key == 'style') {
-              let _style = el.getAttribute('style') || '';
-              _style = _style.replace(content, '');
-              _style = _style == '' ? '' : _style + ' ';
-              el.setAttribute('style', _style + value);
-            }
-            if (o.key != '') {
-              el.setAttribute(o.key, value);
-            }
-            break;
-          case 'text':
-            if (value !== o.text) {
-              el.innerText = value;
-            }
-            break;
-        }
-        o.value = value;
-      });
-      function analysis(compObj, _analysis) {
-        return render(null, compObj, Sv.config, _analysis);
       }
     }
-    console.log(_componentList['c2']);
-  });
+  }
+  function parallelism(key, value, compObj) {
+    let parentEl = compObj.props['_el'];
+    typeof parentEl == 'string' ? parentEl = document.querySelector(parentEl) : null;
+    /* 根据组件所处状态触发更新 元素  */
+    if (compObj._status == 'componentBeforeRender') {
+      parentEl = compObj._html;
+    }
+    if (compObj._status == 'componentMount') {
+      return;
+    }
+    compObj.parallelism[key].forEach(o => {
+      let sign = 'sv_sign_id="' + o.id + '"';
+      let el = parentEl.querySelector('[data-' + sign + ']');
+      let content = analysis(compObj, {
+        value: o.value
+      });
+      switch (o.type) {
+        case 'attribute':
+          if (o.key == 'class') {
+            let _class = el.getAttribute('class') || '';
+            _class = _class.replace(content, '');
+            _class = _class == '' ? '' : _class + ' ';
+            el.setAttribute('class', _class + value);
+          }
+          if (o.key == 'style') {
+            let _style = el.getAttribute('style') || '';
+            _style = _style.replace(content, '');
+            _style = _style == '' ? '' : _style + ' ';
+            el.setAttribute('style', _style + value);
+          }
+          if (o.key != '') {
+            el.setAttribute(o.key, value);
+          }
+          break;
+        case 'text':
+          if (value !== o.text) {
+            el.innerText = value;
+          }
+          break;
+      }
+      // o.value = value;
+    });
+
+    function analysis(compObj, _analysis) {
+      return render(null, compObj, Sv.config, _analysis);
+    }
+  }
+  console.log(_componentList['c2']);
+  // });
+
   return _componentList;
 };
 Sv._init.forEach(fn => {
   fn();
 });
 
-console.log(Sv);
+// import { htmlToVnode } from './modules/vnode.js'
+// import { render } from './modules/render.js'
+
 class c1 extends Sv.Component {
   constructor(props) {
     super();
@@ -649,26 +705,28 @@ class c2 extends Sv.Component {
       return "event";
     }
   };
-  componentBeforeRender() {
-    /* 在渲染前调用 */
-
+  componentMount() {
     this.setStore({
       'kss2': 2222
     }, true);
     // this.setStore({'kfff':3666},true)
     this.setState({
-      'test_var_state': 3333,
+      c2_1: '333;;klkll',
+      'test_var_state': 'test_var_state',
       'test_var_state2': 3333
     });
     this.pipeline.set({
       'ipe': 6655566
     });
   }
-  componentBeforeRemove() {
-    /* 在组件从 DOM 中移除之前被调用 */
-
-    console.log(this.getStore('kss2'));
-    console.log(this.pipeline.get('ipe'));
+  componentBeforeRender() {/* 在渲染a调用 */
+    // this.setState({ 'test_var_state': '3336445465','test_var_state2': 'test_var_state23333' })
+  }
+  componentAfterRender() {
+    this.setState({
+      'test_var_state': '3336445465',
+      'test_var_state2': 'test_var_state2111'
+    });
   }
   template() {
     return `
@@ -687,7 +745,9 @@ class c2 extends Sv.Component {
                     <p>{this.state.input}</p>
 
                     <div class="{this.state.c2_1}">{this.state.c2_1}wo de{this.state.c2_1}</div>
-                    <div class="{this.state.c2_2}">{this.state.c2_2}</div>
+                    <div class="{this.state.c2_2}">{this.state.test_var_state}</div>
+
+                    <p>{this.state.test_var_state2}</p>
 
                     <div class="">{this.methods.event}</div>
 

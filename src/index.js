@@ -1,9 +1,8 @@
 
 import { Sv, Component } from './modules/Sv.js'
-import { htmlToVnode } from './modules/vnode.js'
-import { render } from './modules/render.js'
+// import { htmlToVnode } from './modules/vnode.js'
+// import { render } from './modules/render.js'
 
-console.log(Sv);
 class c1 extends Sv.Component {
     constructor(props) {
         super()
@@ -52,20 +51,22 @@ class c2 extends Sv.Component {
             return "event"
         }
     }
-    componentBeforeRender() {/* 在渲染前调用 */
+    componentMount(){
+        this.setStore({'kss2':2222},true)
+        // this.setStore({'kfff':3666},true)
+        this.setState({ c2_1:'333;;klkll','test_var_state': 'test_var_state','test_var_state2': 3333 })
+    
+    
+        this.pipeline.set({'ipe':6655566})
+    }
+    componentBeforeRender() {/* 在渲染a调用 */
+        // this.setState({ 'test_var_state': '3336445465','test_var_state2': 'test_var_state23333' })
 
-    this.setStore({'kss2':2222},true)
-    // this.setStore({'kfff':3666},true)
-    this.setState({ 'test_var_state': 3333,'test_var_state2': 3333 })
+    }
+    componentAfterRender(){
+        this.setState({ 'test_var_state': '3336445465','test_var_state2': 'test_var_state2111' })
+    }
 
-
-    this.pipeline.set({'ipe':6655566})
-}
-componentBeforeRemove() {/* 在组件从 DOM 中移除之前被调用 */
-
-   console.log(this.getStore('kss2'));
-   console.log(this.pipeline.get('ipe'));
-}
     template(){
         return `
                 <div id="d" class="kk" style="color:red">
@@ -83,7 +84,9 @@ componentBeforeRemove() {/* 在组件从 DOM 中移除之前被调用 */
                     <p>{this.state.input}</p>
 
                     <div class="{this.state.c2_1}">{this.state.c2_1}wo de{this.state.c2_1}</div>
-                    <div class="{this.state.c2_2}">{this.state.c2_2}</div>
+                    <div class="{this.state.c2_2}">{this.state.test_var_state}</div>
+
+                    <p>{this.state.test_var_state2}</p>
 
                     <div class="">{this.methods.event}</div>
 
