@@ -54,17 +54,22 @@ class c2 extends Sv.Component {
     componentMount(){
         this.setStore({'kss2':2222},true)
         // this.setStore({'kfff':3666},true)
-        this.setState({ c2_1:'333;;klkll','test_var_state': 'test_var_state','test_var_state2': 3333 })
+        this.setState({ c2_1:'333;;klkll','test_var_state': 'componentMount','test_var_state2': 'componentMount222' })
     
-    
-        this.pipeline.set({'ipe':6655566})
+
+        // this.pipeline.set({'ipe':6655566})
     }
-    componentBeforeRender() {/* 在渲染a调用 */
-        // this.setState({ 'test_var_state': '3336445465','test_var_state2': 'test_var_state23333' })
+  
+    componentBeforeRender(html) {/* 在渲染a调用 */
+        this.setState({ c2_1:'333;;klkll','test_var_state': '渲染前33364454656','test_var_state2': '渲染前'})
 
     }
     componentAfterRender(){
-        this.setState({ 'test_var_state': '3336445465','test_var_state2': 'test_var_state2111' })
+        this.setState({ c2_1:'333;渲染后;klkll','test_var_state': '渲染后3336445465','test_var_state2': '渲染后' })
+
+    }
+    componentAfterUpdate(){
+        console.log('update');
     }
 
     template(){

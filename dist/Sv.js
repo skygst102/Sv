@@ -384,15 +384,17 @@ Sv.defineProperty = function (Wobj, key, setFn, getFn) {
   function wacth(Wobj, key) {
     Object.defineProperty(Wobj, '_' + key + '_', {
       get: function () {
-        if (isFunction(setFn)) {
+        if (isFunction(getFn)) {
           getFn(key);
         }
         return Wobj[key];
       },
       set: function (value) {
-        Wobj[key] = value;
-        if (isFunction(setFn)) {
-          setFn(key, value);
+        if (Wobj[key] !== value) {
+          Wobj[key] = value;
+          if (isFunction(setFn)) {
+            setFn(key, value);
+          }
         }
       }
     });
@@ -410,8 +412,6 @@ Sv.defineProperty = function (Wobj, key, setFn, getFn) {
 // }
 Sv.use = function (comParam, arg) {
   let _componentList = {};
-
-  // Sv.domReady(function () {
   if (isString(comParam)) {
     let componentObj = Sv.components[comParam];
     if (!componentObj) {
@@ -433,13 +433,25 @@ Sv.use = function (comParam, arg) {
         obj.store = Object.assign(obj.store || {}, {});
         obj.props = Object.assign(obj.props || {}, value);
         obj.parallelism = {};
+        obj._updateStateList = {};
         obj._pipeline = {};
         obj._status = 'init';
         obj._name = compName;
-        obj._parentNode = obj.props._el || '';
+        obj._root = obj.props._el || '';
+
         /*  */
         Sv.defineProperty(obj.state, null, function (key, value) {
-          parallelism('state_' + key, value, obj);
+          updateStateList(obj, {
+            [key]: value
+          });
+          // obj.update('state_' + key, value);
+          // parallelism('state_' + key, value, obj)
+        });
+
+        Sv.defineProperty(obj, '_status', function (key, status) {
+          if (status === false) return;
+          componentStatusFn(obj, status);
+          updateParallelism(obj, status);
         });
         // Sv.defineProperty(obj.store);
         // Sv.defineProperty(obj.props);
@@ -472,31 +484,26 @@ Sv.use = function (comParam, arg) {
         }
       };
       componentObj.setState = obj => {
-        // _updateStateList.push(obj)
-
         if (isObject(obj)) {
           let _in = {},
             _su = {};
-          {
-            for (const key in obj) {
-              //state存在更新，不存在取出
-              if (componentObj.state[key]) {
-                _in['_' + key + '_'] = obj[key];
-              } else {
-                _su[key] = obj[key];
-              }
+          //state存在更新，不存在取出
+          for (const key in obj) {
+            if (componentObj.state[key]) {
+              _in['_' + key + '_'] = obj[key];
+            } else {
+              _su[key] = obj[key];
             }
-            Object.assign(componentObj.state, Object.assign(_in, _su));
           }
-          {
-            /* 监听新值 */
-            for (let key in _su) {
-              if (key) {
-                Sv.defineProperty(componentObj.state, key, function (key, value) {
-                  parallelism('state_' + key, value, componentObj);
-                });
-              }
-            }
+          Object.assign(componentObj.state, Object.assign(_in, _su));
+
+          /* 监听新值 */
+          for (let key in _su) {
+            Sv.defineProperty(componentObj.state, key, function (key, value) {
+              updateStateList(componentObj, {
+                [key]: value
+              });
+            });
           }
         }
       };
@@ -532,17 +539,24 @@ Sv.use = function (comParam, arg) {
           }
         }
       };
+      componentObj.update = (key, value) => {
+        // console.log('update');
+        // parallelism('state_' + key, value, componentObj)
+        // updateParallelism(componentObj,status)
+      };
+      componentObj.unMount = () => {
+        /* 组件从 DOM 中卸载被调用 */
+        componentObj.__status_ = 'componentUnMount';
+      };
       if (componentObj.template) {
         /* 在挂载前调用 */
-        if (componentObj.componentMount) {
-          componentObj._status = 'componentMount';
-          let res = componentObj.componentMount();
-          if (res) {
-            return res;
-          }
+        componentObj.__status_ = 'componentMount';
+        if (componentObj._status === false) {
+          return;
         }
         Sv.domReady(function () {
-          let parentEl = componentObj.props._el ? document.querySelector(componentObj.props._el) : null;
+          componentObj._root = componentObj._root ? document.querySelector(componentObj._root) : null;
+          let parentEl = componentObj._root;
           let template = componentObj.template();
           let vnode;
           let html;
@@ -553,91 +567,153 @@ Sv.use = function (comParam, arg) {
           html = Sv.render(vnode, componentObj, Sv.config);
           componentObj._html = html;
           /* 在渲染前调用 */
-          if (componentObj.componentBeforeRender) {
-            componentObj._status = 'componentBeforeRender';
-            let res = componentObj.componentBeforeRender(html);
-            if (res) {
-              if (isObject(res) && res.html) {
-                html = res.html;
-              } else {
-                return res;
-              }
-            }
+          componentObj.__status_ = 'componentBeforeRender';
+          if (componentObj._status === false) {
+            return;
           }
           /* 插入dom */
-          parentEl.appendChild(html);
+          parentEl.appendChild(componentObj._html);
 
           /* 在渲染后调用 */
-          if (componentObj.componentAfterRender) {
-            componentObj._status = 'componentAfterRender';
-            componentObj.componentAfterRender();
-          }
-
-          /* 在组件完成更新后立即调用。在初始化时不会被调用 */
-          if (componentObj.componentAfterUpdate) {
-            componentObj._status = 'componentAfterUpdate';
-            componentObj.componentAfterUpdate();
-          }
-
-          /* 组件从 DOM 中卸载被调用 */
-          if (componentObj.componentUnMount) {
-            componentObj._status = 'componentUnMount';
-            componentObj.componentUnMount();
-          }
+          componentObj.__status_ = 'componentAfterRender';
         });
       }
     }
   }
-  function parallelism(key, value, compObj) {
-    let parentEl = compObj.props['_el'];
-    typeof parentEl == 'string' ? parentEl = document.querySelector(parentEl) : null;
+  function updateParallelism(compObj, status) {
+    let parentEl;
+    let parallelism = compObj.parallelism;
     /* 根据组件所处状态触发更新 元素  */
-    if (compObj._status == 'componentBeforeRender') {
+    if (/componentBeforeRender/g.test(compObj._status) == true) {
       parentEl = compObj._html;
-    }
-    if (compObj._status == 'componentMount') {
+    } else if (/componentMount/g.test(compObj._status) == true) {
       return;
+    } else {
+      parentEl = compObj._root;
     }
-    compObj.parallelism[key].forEach(o => {
-      let sign = 'sv_sign_id="' + o.id + '"';
-      let el = parentEl.querySelector('[data-' + sign + ']');
-      let content = analysis(compObj, {
-        value: o.value
-      });
-      switch (o.type) {
-        case 'attribute':
-          if (o.key == 'class') {
-            let _class = el.getAttribute('class') || '';
-            _class = _class.replace(content, '');
-            _class = _class == '' ? '' : _class + ' ';
-            el.setAttribute('class', _class + value);
-          }
-          if (o.key == 'style') {
-            let _style = el.getAttribute('style') || '';
-            _style = _style.replace(content, '');
-            _style = _style == '' ? '' : _style + ' ';
-            el.setAttribute('style', _style + value);
-          }
-          if (o.key != '') {
-            el.setAttribute(o.key, value);
-          }
-          break;
-        case 'text':
-          if (value !== o.text) {
-            el.innerText = value;
-          }
-          break;
+    if (compObj._status == 'componentBeforeRendered' || compObj._status == 'componentAfterRendered') {
+      let updateState = status.replace(/(ed)$/g, '');
+      for (const key in compObj._updateStateList[updateState]) {
+        let value = compObj._updateStateList[updateState][key];
+        update(key, value);
       }
-      // o.value = value;
-    });
-
+      /* 在组件完成更新*/
+      compObj.__status_ = 'componentAfterUpdate';
+    }
     function analysis(compObj, _analysis) {
       return render(null, compObj, Sv.config, _analysis);
     }
+    function update(key, value) {
+      parallelism['state_' + key].forEach(o => {
+        let sign = 'sv_sign_id="' + o.id + '"';
+        let el = parentEl.querySelector('[data-' + sign + ']');
+        let content = analysis(compObj, {
+          value: o.value
+        });
+        switch (o.type) {
+          case 'attribute':
+            if (o.key == 'class') {
+              let _class = el.getAttribute('class') || '';
+              _class = _class.replace(content, '');
+              _class = _class == '' ? '' : _class + ' ';
+              el.setAttribute('class', _class + value);
+            }
+            if (o.key == 'style') {
+              let _style = el.getAttribute('style') || '';
+              _style = _style.replace(content, '');
+              _style = _style == '' ? '' : _style + ' ';
+              el.setAttribute('style', _style + value);
+            }
+            if (o.key != '') {
+              el.setAttribute(o.key, value);
+            }
+            break;
+          case 'text':
+            if (value !== o.text) {
+              el.innerText = value;
+            }
+            break;
+        }
+      });
+    }
+  }
+  function componentStatusFn(compObj, status) {
+    compObj.__status_ = status;
+    switch (status) {
+      case 'componentMount':
+        if (compObj.componentMount) {
+          let res = compObj.componentMount();
+          if (res === false) {
+            compObj.__status_ = false;
+          }
+          compObj.__status_ = 'componentMounted';
+        }
+        break;
+      case 'componentUnMount':
+        if (compObj.componentUnMount) {
+          let res = compObj.componentUnMount();
+          if (res === false) {
+            return;
+          }
+        }
+        Sv.components[compObj._name] = null;
+        delete Sv.components[compObj._name];
+        compObj.__status_ = 'componentMounted';
+        break;
+      case 'componentBeforeRender':
+        if (compObj.componentBeforeRender) {
+          let res = compObj.componentBeforeRender(compObj._html);
+          if (isObject(res) && res.html) {
+            compObj._html = res.html;
+          }
+          if (res === false) {
+            compObj.__status_ = false;
+          }
+        }
+        compObj.__status_ = 'componentBeforeRendered';
+        break;
+      case 'componentAfterRender':
+        if (compObj.componentAfterRender) {
+          let res = compObj.componentAfterRender();
+          if (res === false) {
+            compObj.__status_ = false;
+          }
+        }
+        compObj.__status_ = 'componentAfterRendered';
+        break;
+      case 'componentAfterUpdate':
+        console.log('12');
+        if (compObj.componentAfterUpdate) {
+          let res = compObj.componentAfterUpdate();
+          if (res === false) {
+            compObj.__status_ = false;
+          }
+        }
+        compObj.__status_ = 'componentAfterUpdated';
+        break;
+    }
+  }
+  function updateStateList(componentObj, stateKey) {
+    /* 收集需要更新的值 */
+    if (componentObj._status == 'componentMount') {
+      return;
+    }
+    let stateList = componentObj._updateStateList[componentObj._status];
+    if (componentObj._status == 'init') {
+      return;
+    }
+    if (!stateList) {
+      componentObj._updateStateList[componentObj._status] = {};
+    }
+    if (isObject(stateKey)) {
+      Object.assign(componentObj._updateStateList[componentObj._status], stateKey);
+    } else {
+      Object.assign(componentObj._updateStateList[componentObj._status], {
+        [stateKey]: componentObj.state[stateKey]
+      });
+    }
   }
   console.log(_componentList['c2']);
-  // });
-
   return _componentList;
 };
 Sv._init.forEach(fn => {
@@ -712,21 +788,30 @@ class c2 extends Sv.Component {
     // this.setStore({'kfff':3666},true)
     this.setState({
       c2_1: '333;;klkll',
-      'test_var_state': 'test_var_state',
-      'test_var_state2': 3333
+      'test_var_state': 'componentMount',
+      'test_var_state2': 'componentMount222'
     });
-    this.pipeline.set({
-      'ipe': 6655566
-    });
+
+    // this.pipeline.set({'ipe':6655566})
   }
-  componentBeforeRender() {/* 在渲染a调用 */
-    // this.setState({ 'test_var_state': '3336445465','test_var_state2': 'test_var_state23333' })
+
+  componentBeforeRender(html) {
+    /* 在渲染a调用 */
+    this.setState({
+      c2_1: '333;;klkll',
+      'test_var_state': '渲染前33364454656',
+      'test_var_state2': '渲染前'
+    });
   }
   componentAfterRender() {
     this.setState({
-      'test_var_state': '3336445465',
-      'test_var_state2': 'test_var_state2111'
+      c2_1: '333;渲染后;klkll',
+      'test_var_state': '渲染后3336445465',
+      'test_var_state2': '渲染后'
     });
+  }
+  componentAfterUpdate() {
+    console.log('update');
   }
   template() {
     return `

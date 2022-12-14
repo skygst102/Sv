@@ -171,8 +171,6 @@ function render(vdom, compObj, config, _analysis) {
     }
     parentNode = createElement(vdom, compObj, temIdentifying_select, temIdentifying_replace, parallelism_flash, orderPrefix)
     return parentNode;
-
-
 }
 
 export { render }
